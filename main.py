@@ -26,9 +26,33 @@ def samle_rune_data(sti: str) -> dict:
             "temperatur": temperatur
         }
 
+def samle_met_data(sti: str) -> dict:
+    with open(sti, mode="r", encoding="utf-8-sig") as fil: # -,-
+        # Samler hver kolonne i en liste
+        lokasjon = []
+        stasjon = []
+        dato_tid = []
+        temperatur = []
+        trykk_hav = []
+        for linje in csv.reader(fil, delimiter=";"):
+            lokasjon.append(linje[0])
+            stasjon.append(linje[1])
+            dato_tid.append(linje[2])
+            temperatur.append(linje[3])
+            trykk_hav.append(linje[4])
+        
+        # Returnerer en dict med kolonnenavn som nøkler og kolonnelistene som verdier
+        return {
+            "lokasjon": lokasjon,
+            "stasjon": stasjon,
+            "dato_tid": dato_tid,
+            "temperatur": temperatur,
+            "trykk_hav": trykk_hav
+        }
+
 def main():
     rune_data = samle_rune_data(RUNE_FILSTI)
-    #met_data = samle_met_data(MET_FILSTI)
+    met_data = samle_met_data(MET_FILSTI)
     
 if __name__ == "__main__":
     main()
