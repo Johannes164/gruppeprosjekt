@@ -84,6 +84,20 @@ def konverter_temperatur(data: dict):
         temperaturer.append(float(temperatur.replace(",", ".")))
     data["temperatur"] = temperaturer
 
+
+def plot_temp(metdata, runedata):
+    
+    plt.subplot(2,1,1)
+    xaksemet = metdata["dato_tid"]
+    yaksemet = metdata["temperatur"]
+    plt.plot(xaksemet,yaksemet, color="green", label="Temperatur MET")
+
+
+    xakserune = runedata["dato_tid"]
+    yakserune = runedata["temperatur"]
+    plt.plot(xakserune,yakserune, label ="Temperatur")
+
+
 # oppgave g)
 def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     """
@@ -111,8 +125,10 @@ def main():
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
-    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+    plot_temp(met_data, rune_data)
 
+    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+    
     # oppgave g) plotter redusert temperatur med tid
     plt.plot(redusert_dato, redusert_temperatur, label="Gjennomsnittstemperatur", color="orange")
     plt.xlabel("Tid")
