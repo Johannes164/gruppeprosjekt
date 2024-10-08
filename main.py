@@ -70,23 +70,13 @@ def konverter_rune_dato_tid(data: dict):
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
 def konverter_met_dato_tid(data: dict):
-    konverterte_datoer = []
-
-    for dato in data["dato_tid"]:
-        konvertert = dt.datetime.strptime(dato, "%d.%m.%Y %H:%M")
-        konverterte_datoer.append(konvertert)
-
-    data["dato_tid"] = konverterte_datoer
-    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
-
-def konverter_met_dato_tid(data: dict):
     met_data_liste_datetime = list()
 
     for tidspunkt in data["dato_tid"]:
             datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
             met_data_liste_datetime.append(datetime_tidspunkt)
     data["dato_tid"] = met_data_liste_datetime
-    
+    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
 def main():
     # samler dataen til ordbøker med lister
