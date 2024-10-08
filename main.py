@@ -40,7 +40,13 @@ def samle_met_data(sti: str) -> dict:
         temperatur = []
         trykk_hav = []
 
-        for linje in csv.reader(fil, delimiter=";"):
+        # Hopper over header raden
+        next(fil)
+
+        # Samler radene i en liste for å hoppe over siste rad
+        rader = list(csv.reader(fil, delimiter=";"))
+
+        for linje in rader[:-1]:
             dato_tid.append(linje[2])
             temperatur.append(linje[3])
             trykk_hav.append(linje[4])
@@ -66,6 +72,12 @@ def konverter_rune_dato_tid(data: dict):
 def konverter_met_dato_tid(data: dict):
     konverterte_datoer = []
 
+    for dato in data["dato_tid"]:
+        konvertert = dt.datetime.strptime(dato, "%d.%m.%Y %H:%M")
+        konverterte_datoer.append(konvertert)
+
+    data["dato_tid"] = konverterte_datoer
+    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
 def main():
     # samler dataen til ordbøker med lister
@@ -79,7 +91,7 @@ def main():
     # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
     for i, dato in enumerate(rune_data["dato_tid"]):
         print(f"{i+2}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None # +1 for vi starter på indeks 0, +1 siden vi hopper over header raden
-    
+
 
 if __name__ == "__main__":
     main()
