@@ -40,6 +40,9 @@ def samle_met_data(sti: str) -> dict:
         temperatur = []
         trykk_hav = []
 
+        #Hopper over header raden
+        next(fil)
+
         for linje in csv.reader(fil, delimiter=";"):
             dato_tid.append(linje[2])
             temperatur.append(linje[3])
@@ -62,6 +65,15 @@ def konverter_rune_dato_tid(data: dict):
 
     data["dato_tid"] = konverterte_datoer
 
+def konverter_met_dato_tid(data: dict):
+    met_data_liste_datetime = list()
+
+    for tidspunkt in data["dato_tid"]:
+            datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
+            met_data_liste_datetime.append(datetime_tidspunkt)
+    data["dato_tid"] = met_data_liste_datetime
+    
+
 def main():
     # samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
@@ -69,22 +81,14 @@ def main():
     
     # konverterer dato_tid til datetime objekter
     konverter_rune_dato_tid(rune_data)
-    #konverter_met_dato_tid(met_data)
+    konverter_met_dato_tid(met_data)
 
     # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
-    #for i, dato in enumerate(rune_data["dato_tid"]):
-    #    print(f"{i+1}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None
+    for i, dato in enumerate(rune_data["dato_tid"]):
+        print(f"{i+1}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None
 
-    met_data_liste = list()
-    met_data_liste_datetime = list()
-    for element in met_data["dato_tid"]:
-        met_data_liste.append(element)
     
-    for tidspunkt in met_data_liste:
-        datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
-        met_data_liste_datetime.append(datetime_tidspunkt)
     
-    print(met_data_liste_datetime)
     
 
 if __name__ == "__main__":
