@@ -32,3 +32,32 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+
+
+
+
+    # Alt over er main filen ved tidspunktet jeg skriver denne testen
+
+def test_samle_rune_data():
+    linjer_som_sjekkes = [0, 1, 2, 3, 10, 100, 1000, 4000, 8000, 15000, 20000, 20220, 20221, 20222, 20223]
+    rune_data = samle_rune_data(RUNE_FILSTI)
+    for linje in linjer_som_sjekkes:
+        assert rune_data["dato_tid"][linje] != ""
+        assert rune_data["stoppeklokke"][linje] != ""
+        #assert rune_data["trykk_barometer"][linje] != ""
+        assert rune_data["trykk_absolutt"][linje] != ""
+        assert rune_data["temperatur"][linje] != ""
+    
+    
+    
+        print(f"Linje {linje} i RUNE-filen har data")
+        print(f"Dato og tid: {rune_data['dato_tid'][linje]}")
+        print(f"Stoppeklokke: {rune_data['stoppeklokke'][linje]}")
+        print(f"Trykk barometer: {rune_data['trykk_barometer'][linje]}")
+        print(f"Trykk absolutt: {rune_data['trykk_absolutt'][linje]}")
+        print(f"Temperatur: {rune_data['temperatur'][linje]}")
+
+test_samle_rune_data()
+
+# resultat: alt ser ut til å fungere som det skal
