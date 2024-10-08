@@ -85,19 +85,6 @@ def konverter_temperatur(data: dict):
     data["temperatur"] = temperaturer
 
 
-def plot_temp(metdata, runedata):
-    
-    plt.subplot(2,1,1)
-    xaksemet = metdata["dato_tid"]
-    yaksemet = metdata["temperatur"]
-    plt.plot(xaksemet,yaksemet, color="green", label="Temperatur MET")
-
-
-    xakserune = runedata["dato_tid"]
-    yakserune = runedata["temperatur"]
-    plt.plot(xakserune,yakserune, label ="Temperatur")
-
-
 # oppgave g)
 def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     """
@@ -112,6 +99,28 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     redusert_x = x_verdier[snitt_delta:len(x_verdier)-snitt_delta] # fjerner de første og siste snitt_delta punktene fra x verdiene
     return redusert_y, redusert_x
 
+
+def plotting(oppg_f, oppg_g):
+    
+    # oppgave f) plotter temperatur mot tid
+    plt.subplot(2,1,1)
+    xaksemet = oppg_f[0]["dato_tid"]
+    yaksemet = oppg_f[0]["temperatur"]
+    plt.plot(xaksemet,yaksemet, color="green", label="Temperatur MET")
+
+
+    xakserune = oppg_f[1]["dato_tid"]
+    yakserune = oppg_f[1]["temperatur"]
+    plt.plot(xakserune,yakserune, label ="Temperatur")
+
+    # oppgave g) plotter redusert temperatur med tid
+    plt.plot(oppg_g[0], oppg_g[1], label="Gjennomsnittstemperatur", color="orange")
+    plt.xlabel("Tid")
+    plt.ylabel("Temperatur")
+    plt.title("Redusert temperatur over tid")
+    plt.legend()
+    plt.show()
+
 def main():
     # samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
@@ -125,17 +134,9 @@ def main():
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
-    plot_temp(met_data, rune_data)
-
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
     
-    # oppgave g) plotter redusert temperatur med tid
-    plt.plot(redusert_dato, redusert_temperatur, label="Gjennomsnittstemperatur", color="orange")
-    plt.xlabel("Tid")
-    plt.ylabel("Temperatur")
-    plt.title("Redusert temperatur over tid")
-    plt.legend()
-    plt.show()
+    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur))
 
 if __name__ == "__main__":
     main()
