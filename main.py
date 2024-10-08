@@ -110,8 +110,24 @@ def konverter_barometrisk_trykk(data: dict):
             x_verdier.append(data["dato_tid"][i])
     return y_verdier, x_verdier
 
+def konverter_absolutt_trykk(data: dict):
+    y_verdier = []
+    x_verdier = []
+    for i, trykk in enumerate(data["trykk_absolutt"]):
+        y_verdier.append(float(trykk.replace(",","."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
+        x_verdier.append(data["dato_tid"][i])
+    return y_verdier, x_verdier
 
-def plotting(oppg_f, oppg_g, oppg_i):
+def konverter_trykk_hav(data: dict):
+    y_verdier = []
+    x_verdier = []
+    for i, trykk in enumerate(data["trykk_hav"]):
+        y_verdier.append(float(trykk.replace(",","."))) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
+        x_verdier.append(data["dato_tid"][i])
+    return y_verdier, x_verdier
+    
+
+def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
     
     # oppgave f) plotter temperatur mot tid
     plt.subplot(2,1,1)
@@ -130,11 +146,15 @@ def plotting(oppg_f, oppg_g, oppg_i):
     plt.ylabel("Temperatur")
     plt.legend()
 
-    # oppgave i) plotter barometrisk trykk mot tid
+    # oppgave i) 
     plt.subplot(2,1,2)
-    plt.plot(oppg_i[1], oppg_i[0], color="orange", label="Barometrisk trykk")
+    plt.plot(oppg_i1[1], oppg_i1[0], color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
+    plt.plot(oppg_i2[1], oppg_i2[0], color="blue", label="Absolutt trykk") #plotter absolutt trykk mot tid
+    plt.plot(oppg_i3[1], oppg_i3[0], color="green", label="Absolutt trykkk MET") #plotter trykk hav mot tid
     plt.xlabel("Tid")
     plt.ylabel("Trykk")
+    
+    
     plt.legend()
     plt.show()
 
@@ -155,7 +175,11 @@ def main():
     
     barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
 
-    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (barometrisk_trykk, barometrisk_dato))
+    absolutt_trykk, absolutt_dato = konverter_absolutt_trykk(rune_data) #oppgave i
+
+    hav_trykk, hav_trykk_dato = konverter_trykk_hav(met_data) #oppgave i
+
+    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (barometrisk_trykk, barometrisk_dato), (absolutt_trykk, absolutt_dato), (hav_trykk, hav_trykk_dato))
 
 if __name__ == "__main__":
     main()
