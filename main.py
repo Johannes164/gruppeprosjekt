@@ -100,7 +100,18 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     return redusert_y, redusert_x
 
 
-def plotting(oppg_f, oppg_g):
+# oppgave i)
+def konverter_barometrisk_trykk(data: dict):
+    y_verdier = []
+    x_verdier = []
+    for i, trykk in enumerate(data["trykk_barometer"]):
+        if trykk != "":
+            y_verdier.append(float(trykk.replace(",", "."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
+            x_verdier.append(data["dato_tid"][i])
+    return y_verdier, x_verdier
+
+
+def plotting(oppg_f, oppg_g, oppg_i):
     
     # oppgave f) plotter temperatur mot tid
     plt.subplot(2,1,1)
@@ -117,7 +128,13 @@ def plotting(oppg_f, oppg_g):
     plt.plot(oppg_g[0], oppg_g[1], label="Gjennomsnittstemperatur", color="orange")
     plt.xlabel("Tid")
     plt.ylabel("Temperatur")
-    plt.title("Redusert temperatur over tid")
+    plt.legend()
+
+    # oppgave i) plotter barometrisk trykk mot tid
+    plt.subplot(2,1,2)
+    plt.plot(oppg_i[1], oppg_i[0], color="orange", label="Barometrisk trykk")
+    plt.xlabel("Tid")
+    plt.ylabel("Trykk")
     plt.legend()
     plt.show()
 
@@ -136,7 +153,9 @@ def main():
 
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
     
-    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur))
+    barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
+
+    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (barometrisk_trykk, barometrisk_dato))
 
 if __name__ == "__main__":
     main()
