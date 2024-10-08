@@ -99,6 +99,15 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     redusert_x = x_verdier[snitt_delta:len(x_verdier)-snitt_delta] # fjerner de første og siste snitt_delta punktene fra x verdiene
     return redusert_y, redusert_x
 
+# oppgave h)
+#finner indeksen til 11. juni 17.31 og 12. juni 03.05
+def temperaturfall(data: dict):
+    indeks_11_juni = data["dato_tid"].index(dt.datetime(2021, 6, 11, 17, 31, 8)) # finner indeksen til 11. juni 17.31
+    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3, 5, 8))
+    x_verdier = [data["dato_tid"][indeks_11_juni], data["dato_tid"][indeks_12_juni]]
+    y_verdier = [data["temperatur"][indeks_11_juni], data["temperatur"][indeks_12_juni]]
+    return x_verdier, y_verdier
+
 
 # oppgave i)
 def konverter_barometrisk_trykk(data: dict):
@@ -127,7 +136,7 @@ def konverter_trykk_hav(data: dict):
     return y_verdier, x_verdier
     
 
-def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
+def plotting(oppg_f, oppg_g, oppg_h, oppg_i1, oppg_i2, oppg_i3):
     
     # oppgave f) plotter temperatur mot tid
     plt.subplot(2,1,1)
@@ -142,9 +151,16 @@ def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
 
     # oppgave g) plotter redusert temperatur med tid
     plt.plot(oppg_g[0], oppg_g[1], label="Gjennomsnittstemperatur", color="orange")
+
+    # oppgave h) plotter temperaturfall som en linje mellom de to punktene
+    plt.plot(oppg_h[0], oppg_h[1], color="purple", label="Temperaturfall")
+    
     plt.xlabel("Tid")
     plt.ylabel("Temperatur")
     plt.legend()
+
+
+
 
     # oppgave i) 
     plt.subplot(2,1,2)
@@ -172,6 +188,8 @@ def main():
     konverter_temperatur(met_data)
 
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+
+    tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data) # oppgave h)
     
     barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
 
@@ -179,7 +197,7 @@ def main():
 
     hav_trykk, hav_trykk_dato = konverter_trykk_hav(met_data) #oppgave i
 
-    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (barometrisk_trykk, barometrisk_dato), (absolutt_trykk, absolutt_dato), (hav_trykk, hav_trykk_dato))
+    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (tempfall_tider, tempfall_temperaturer), (barometrisk_trykk, barometrisk_dato), (absolutt_trykk, absolutt_dato), (hav_trykk, hav_trykk_dato))
 
 if __name__ == "__main__":
     main()
