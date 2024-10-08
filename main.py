@@ -78,6 +78,26 @@ def konverter_met_dato_tid(data: dict):
     data["dato_tid"] = met_data_liste_datetime
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
+def konverter_temperatur(data: dict):
+    temperaturer = []
+    for temperatur in data["temperatur"]:
+        temperaturer.append(float(temperatur.replace(",", ".")))
+    data["temperatur"] = temperaturer
+
+# oppgave g)
+def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
+    """
+    Reduserer volatiliteten til en gitt mengde y verdier ved å for hvert punkt ta snittet av de alle punktene fra x-snitt_delta til x+snitt_delta.
+    """
+    redusert_y = [] # tom liste for de reduserte y verdiene
+
+    for i in range(snitt_delta, len(y_verdier) - snitt_delta):
+        snitt = sum(y_verdier[i-snitt_delta:i+snitt_delta+1]) / (2*snitt_delta+1) # tar snittet av punktene fra og med x-snitt_delta til og med x+snitt_delta
+        redusert_y.append(snitt) # legger til snittet i listen
+    
+    redusert_x = x_verdier[snitt_delta:len(x_verdier)-snitt_delta] # fjerner de første og siste snitt_delta punktene fra x verdiene
+    return redusert_y, redusert_x
+
 def main():
     # samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
@@ -87,9 +107,19 @@ def main():
     konverter_rune_dato_tid(rune_data)
     konverter_met_dato_tid(met_data)
 
-    # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
-    for i, dato in enumerate(rune_data["dato_tid"]):
-        print(f"{i+2}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None # +1 for vi starter på indeks 0, +1 siden vi hopper over header raden
+    # konverterer temperatur til float
+    konverter_temperatur(rune_data)
+    konverter_temperatur(met_data)
+
+    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+
+    # oppgave g) plotter redusert temperatur med tid
+    plt.plot(redusert_dato, redusert_temperatur, label="Gjennomsnittstemperatur", color="orange")
+    plt.xlabel("Tid")
+    plt.ylabel("Temperatur")
+    plt.title("Redusert temperatur over tid")
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
     main()
