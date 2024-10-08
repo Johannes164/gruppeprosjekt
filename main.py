@@ -53,7 +53,7 @@ def samle_met_data(sti: str) -> dict:
         }
 
 def konverter_rune_dato_tid(data: dict):
-    start_tid = dt.datetime.strptime(data["dato_tid"][1], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
+    start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
     konverterte_datoer = []
 
     for sekunder_siden_start in data["stoppeklokke"]: # itererer gjennom listen med sekunder siden start
@@ -61,6 +61,11 @@ def konverter_rune_dato_tid(data: dict):
         konverterte_datoer.append(konvertert)
 
     data["dato_tid"] = konverterte_datoer
+    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
+
+def konverter_met_dato_tid(data: dict):
+    konverterte_datoer = []
+
 
 def main():
     # samler dataen til ordbøker med lister
@@ -73,7 +78,7 @@ def main():
 
     # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
     for i, dato in enumerate(rune_data["dato_tid"]):
-        print(f"{i+1}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None
+        print(f"{i+2}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None # +1 for vi starter på indeks 0, +1 siden vi hopper over header raden
     
 
 if __name__ == "__main__":
