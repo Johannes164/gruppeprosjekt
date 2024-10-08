@@ -1,4 +1,7 @@
 import csv
+from datetime import datetime # importerer datetime objektet fra datetime modulen
+import matplotlib.pyplot as plt # importerer pyplot fra matplotlib modulen
+
 RUNE_FILSTI = "trykk_og_temperaturlogg_rune_time.csv" # Definerer filstien til runedata
 MET_FILSTI = "temperatur_trykk_met_samme_rune_time_datasett.csv" # Definerer filstien til metdata
 
@@ -9,6 +12,7 @@ def samle_rune_data(sti: str) -> dict:
         trykk_barometer = []
         trykk_absolutt = []
         temperatur = []
+
         for linje in csv.reader(fil, delimiter=";"):
             dato_tid.append(linje[0])
             trykk_barometer.append(linje[2])
@@ -29,6 +33,7 @@ def samle_met_data(sti: str) -> dict:
         dato_tid = []
         temperatur = []
         trykk_hav = []
+
         for linje in csv.reader(fil, delimiter=";"):
             dato_tid.append(linje[2])
             temperatur.append(linje[3])
@@ -41,9 +46,29 @@ def samle_met_data(sti: str) -> dict:
             "trykk_hav": trykk_hav
         }
 
+def konverter_dato_tid(data: dict):
+    konverterte_datoer = []
+    for dato in data["dato_tid"]:
+        try:
+            if "am" in dato.lower() or "pm" in dato.lower():
+                konvertert = datetime.strptime(dato, "%m/%d/%Y %I:%M:%S %p")
+            else:
+                konvertert = datetime.strptime(dato, "%m.%d.%Y %H:%M")
+            konverterte_datoer.append(konvertert)
+        except ValueError as e:
+            print(f"Kunne ikke konvertere dato {dato} til datetime objekt: {e}")
+
+    data["dato_tid"] = konverterte_datoer
+
 def main():
-    rune_data = samle_rune_data(RUNE_FILSTI)
-    met_data = samle_met_data(MET_FILSTI)
+    # samler dataen til ordbøker med lister
+    rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
+    met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
     
+    # konverterer dato_tid til datetime objekter
+    konverter_dato_tid(rune_data)
+    konverter_dato_tid(met_data)
+    
+
 if __name__ == "__main__":
     main()
