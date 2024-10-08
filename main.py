@@ -1,3 +1,24 @@
+"""
+Oppgaver:
+
+a) Johannes
+b) Johannes, Ådne, Mathias
+c) Johannes, Ådne
+d) Johannes
+e) Johannes
+f) Ådne
+g) Johannes
+h) Johannes
+i) Barometrisk: Johannes, atmosfærisk: Ådne
+j) Johannes
+k) og l) ikke gjort (frivillig)
+
+
+pull requests, merging, rydding og finalisering av filer: Johannes
+dokumentasjon: Johannes
+"""
+
+
 import csv
 import datetime as dt
 import matplotlib.pyplot as plt # importerer pyplot fra matplotlib modulen
@@ -149,7 +170,7 @@ def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
     # oppgave i) 
     plt.subplot(2,1,2)
     plt.plot(oppg_i1[1], oppg_i1[0], color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
-    plt.plot(oppg_i2[1], oppg_i2[0], color="blue", label="Absolutt trykk") #plotter absolutt trykk mot tid
+    plt.plot(oppg_i2[1], oppg_i2[0], label="Absolutt trykk") #plotter absolutt trykk mot tid
     plt.plot(oppg_i3[1], oppg_i3[0], color="green", label="Absolutt trykkk MET") #plotter trykk hav mot tid
     plt.xlabel("Tid")
     plt.ylabel("Trykk")
@@ -157,6 +178,15 @@ def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
     
     plt.legend()
     plt.show()
+
+
+def plot_gjennomsnitt(x, y, sub_plot=(1,1,1), show=True):
+    plt.subplot(*sub_plot) # *sub_plot er en tuple unpacking, så sub_plot=(2,1,1) blir til plt.subplot(2,1,1) i stedet for plt.subplot((2,1,1))
+    plt.plot(x, y)
+    plt.xlabel("Tid")
+    plt.ylabel("Temperatur")
+    if show:
+        plt.show()
 
 def main():
     # samler dataen til ordbøker med lister
@@ -171,7 +201,20 @@ def main():
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
+<<<<<<< Updated upstream
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+=======
+    # Oppgave g)
+    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) 
+    plot_gjennomsnitt(redusert_dato, redusert_temperatur, sub_plot=(2,1,1), show=False)
+
+    # oppgave h)
+    
+
+    
+
+    tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data) # oppgave h)
+>>>>>>> Stashed changes
     
     barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
 
