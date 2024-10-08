@@ -56,3 +56,56 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+
+
+
+
+    # Alt over er main filen ved tidspunktet jeg skriver denne testen
+
+def test_samle_rune_data():
+    linjer_som_sjekkes = [0, 1, 2, 3, 10, 100, 1000, 4000, 8000, 15000, 20000, 20220, 20221]
+    rune_data = samle_rune_data(RUNE_FILSTI)
+    for linje in linjer_som_sjekkes:
+        assert rune_data["dato_tid"][linje] != ""
+        assert rune_data["stoppeklokke"][linje] != ""
+        #assert rune_data["trykk_barometer"][linje] != ""
+        assert rune_data["trykk_absolutt"][linje] != ""
+        assert rune_data["temperatur"][linje] != ""
+    
+    
+    
+        print(f"Linje {linje} i RUNE-filen har data")
+        print(f"Dato og tid: {rune_data['dato_tid'][linje]}")
+        print(f"Stoppeklokke: {rune_data['stoppeklokke'][linje]}")
+        print(f"Trykk barometer: {rune_data['trykk_barometer'][linje]}")
+        print(f"Trykk absolutt: {rune_data['trykk_absolutt'][linje]}")
+        print(f"Temperatur: {rune_data['temperatur'][linje]}")
+
+test_samle_rune_data()
+print("\n\n")
+
+def test_samle_met_data():
+    linjer_som_sjekkes = [0, 1, 2, 3, 10, 40, 72, 73, 74]
+    met_data = samle_met_data(MET_FILSTI)
+    for linje in linjer_som_sjekkes:
+        assert met_data["lokasjon"][linje] != ""
+        assert met_data["stasjon"][linje] != ""
+        assert met_data["dato_tid"][linje] != ""
+        assert met_data["temperatur"][linje] != ""
+        assert met_data["trykk_hav"][linje] != ""
+    
+        print(f"\nLinje {linje} i MET-filen har data")
+        print(f"Lokasjon: {met_data['lokasjon'][linje]}")
+        print(f"Stasjon: {met_data['stasjon'][linje]}")
+        print(f"Dato og tid: {met_data['dato_tid'][linje]}")
+        print(f"Temperatur: {met_data['temperatur'][linje]}")
+        print(f"Trykk hav: {met_data['trykk_hav'][linje]}")
+
+
+
+print("met data:", end="")
+test_samle_met_data()
+print("\n\n")
+
+# resultat: alt ser ut til å fungere som det skal
