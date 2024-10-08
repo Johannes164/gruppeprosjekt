@@ -79,7 +79,7 @@ def samle_met_data(sti: str) -> dict:
             "trykk_hav": trykk_hav
         }
 
-def konverter_rune_dato_tid(data: dict):
+def konverter_rune_dato_tid(data: dict) -> None:
     start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
     konverterte_datoer = []
 
@@ -90,7 +90,7 @@ def konverter_rune_dato_tid(data: dict):
     data["dato_tid"] = konverterte_datoer
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
-def konverter_met_dato_tid(data: dict):
+def konverter_met_dato_tid(data: dict) -> None:
     met_data_liste_datetime = list()
 
     for tidspunkt in data["dato_tid"]:
@@ -99,7 +99,7 @@ def konverter_met_dato_tid(data: dict):
     data["dato_tid"] = met_data_liste_datetime
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
-def konverter_temperatur(data: dict):
+def konverter_temperatur(data: dict) -> None:
     temperaturer = []
     for temperatur in data["temperatur"]:
         temperaturer.append(float(temperatur.replace(",", ".")))
@@ -107,7 +107,7 @@ def konverter_temperatur(data: dict):
 
 
 # oppgave g)
-def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
+def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int) -> tuple:
     """
     Reduserer volatiliteten til en gitt mengde y verdier ved å for hvert punkt ta snittet av de alle punktene fra x-snitt_delta til x+snitt_delta.
     """
@@ -120,9 +120,16 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     redusert_x = x_verdier[snitt_delta:len(x_verdier)-snitt_delta] # fjerner de første og siste snitt_delta punktene fra x verdiene
     return redusert_y, redusert_x
 
+# oppgave h)
+def temperaturfall(data: dict) -> tuple:
+    indeks_11_juni = data["dato_tid"].index(dt.datetime(2021, 6, 11, 17, 31, 8)) # finner indeksen til 11. juni 17.31
+    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3, 5, 8)) # finner indeksen til 12. juni 03.05
+    x_verdier = [data["dato_tid"][indeks_11_juni], data["dato_tid"][indeks_12_juni]]
+    y_verdier = [data["temperatur"][indeks_11_juni], data["temperatur"][indeks_12_juni]]
+    return x_verdier, y_verdier
 
 # oppgave i)
-def konverter_barometrisk_trykk(data: dict):
+def konverter_barometrisk_trykk(data: dict) -> tuple:
     y_verdier = []
     x_verdier = []
     for i, trykk in enumerate(data["trykk_barometer"]):
@@ -131,7 +138,7 @@ def konverter_barometrisk_trykk(data: dict):
             x_verdier.append(data["dato_tid"][i])
     return y_verdier, x_verdier
 
-def konverter_absolutt_trykk(data: dict):
+def konverter_absolutt_trykk(data: dict) -> tuple:
     y_verdier = []
     x_verdier = []
     for i, trykk in enumerate(data["trykk_absolutt"]):
@@ -139,7 +146,7 @@ def konverter_absolutt_trykk(data: dict):
         x_verdier.append(data["dato_tid"][i])
     return y_verdier, x_verdier
 
-def konverter_trykk_hav(data: dict):
+def konverter_trykk_hav(data: dict) -> tuple:
     y_verdier = []
     x_verdier = []
     for i, trykk in enumerate(data["trykk_hav"]):
@@ -148,7 +155,7 @@ def konverter_trykk_hav(data: dict):
     return y_verdier, x_verdier
     
 
-def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
+def plotting(oppg_f, oppg_g, oppg_h, oppg_i1, oppg_i2, oppg_i3):
     
     # oppgave f) plotter temperatur mot tid
     plt.subplot(2,1,1)
@@ -163,9 +170,17 @@ def plotting(oppg_f, oppg_g, oppg_i1, oppg_i2, oppg_i3):
 
     # oppgave g) plotter redusert temperatur med tid
     plt.plot(oppg_g[0], oppg_g[1], label="Gjennomsnittstemperatur", color="orange")
+
+    # oppgave h) plotter temperaturfall som en linje mellom de to punktene
+    plt.plot(oppg_h[0], oppg_h[1], color="purple", label="Temperaturfall")
+    
     plt.xlabel("Tid")
     plt.ylabel("Temperatur")
     plt.legend()
+
+
+
+
 
     # oppgave i) 
     plt.subplot(2,1,2)
@@ -189,21 +204,18 @@ def plot_gjennomsnitt(x, y, sub_plot=(1,1,1), show=True):
         plt.show()
 
 def main():
-    # samler dataen til ordbøker med lister
+    # oppgave d) samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
     met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
     
-    # konverterer dato_tid til datetime objekter
+    # oppgave e) konverterer dato_tid til datetime objekter
     konverter_rune_dato_tid(rune_data)
     konverter_met_dato_tid(met_data)
 
-    # konverterer temperatur til float
+    # oppg f) konverterer temperatur til float
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
-<<<<<<< Updated upstream
-    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
-=======
     # Oppgave g)
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) 
     plot_gjennomsnitt(redusert_dato, redusert_temperatur, sub_plot=(2,1,1), show=False)
@@ -214,7 +226,6 @@ def main():
     
 
     tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data) # oppgave h)
->>>>>>> Stashed changes
     
     barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
 
