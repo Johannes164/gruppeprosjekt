@@ -72,8 +72,19 @@ def main():
     #konverter_met_dato_tid(met_data)
 
     # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
-    for i, dato in enumerate(rune_data["dato_tid"]):
-        print(f"{i+1}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None
+    #for i, dato in enumerate(rune_data["dato_tid"]):
+    #    print(f"{i+1}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None
+
+    met_data_liste = list()
+    met_data_liste_datetime = list()
+    for element in met_data["dato_tid"]:
+        met_data_liste.append(element)
+    
+    for tidspunkt in met_data_liste:
+        datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
+        met_data_liste_datetime.append(datetime_tidspunkt)
+    
+    print(met_data_liste_datetime)
     
 
 if __name__ == "__main__":
