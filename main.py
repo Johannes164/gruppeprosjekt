@@ -78,6 +78,32 @@ def konverter_met_dato_tid(data: dict):
     data["dato_tid"] = met_data_liste_datetime
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
+def plot_temp(metdata, runedata):
+    
+    
+    xaksemet = metdata["dato_tid"]
+    yaksemet = metdata["temperatur"]
+    plt.plot(xaksemet,yaksemet, color="green")
+
+
+    xakserune = runedata["dato_tid"]
+    yakserune = runedata["temperatur"]
+    plt.plot(xakserune,yakserune, color="blue")
+    plt.show()
+
+def konverter_temperatur(data: dict):
+    temperatur_float = list()
+    for temperatur in data["temperatur"]:
+        tall = float(temperatur.replace(",","."))
+        temperatur_float.append(tall)
+    data["temperatur"] = temperatur_float
+
+
+
+
+
+
+
 def main():
     # samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
@@ -86,10 +112,24 @@ def main():
     # konverterer dato_tid til datetime objekter
     konverter_rune_dato_tid(rune_data)
     konverter_met_dato_tid(met_data)
+    
+    
+    konverter_temperatur(rune_data)
+    konverter_temperatur(met_data)
+    
+    
+    plot_temp(met_data, rune_data)
 
     # skriver ut datoene for å sjekke at konverteringen har gått riktig for seg
-    for i, dato in enumerate(rune_data["dato_tid"]):
-        print(f"{i+2}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None # +1 for vi starter på indeks 0, +1 siden vi hopper over header raden
+    #for i, dato in enumerate(rune_data["dato_tid"]):
+    #    print(f"{i+2}: {dato.strftime('%d.%m.%Y %H:%M:%S')}") if i > 12092 and i < 12105 else None # +1 for vi starter på indeks 0, +1 siden vi hopper over header raden
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
