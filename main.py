@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt # importerer pyplot fra matplotlib modulen
 RUNE_FILSTI = "trykk_og_temperaturlogg_rune_time.csv" # Definerer filstien til runedata
 MET_FILSTI = "temperatur_trykk_met_samme_rune_time_datasett.csv" # Definerer filstien til metdata
 
+# oppgave d)
 def samle_rune_data(sti: str) -> dict:
     """
     Samler runedataen i en ordbok med lister
@@ -57,6 +58,7 @@ def samle_rune_data(sti: str) -> dict:
             "temperatur": temperatur
         }
 
+# oppgave d)
 def samle_met_data(sti: str) -> dict:
     """
     Samler metdataen i en ordbok med lister
@@ -85,6 +87,7 @@ def samle_met_data(sti: str) -> dict:
             "trykk_hav": trykk_hav
         }
 
+# oppgave e)
 def konverter_dato_tid(data: dict, set="rune") -> None:
     """
     Konverterer dato_tid strengene til datetime objekter
@@ -160,26 +163,32 @@ def subplot(posisjon: int, x_label: str, y_label: str) -> None:
 
 
 def main():
+    
     # oppgave d) samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
     met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
     
+
     # oppgave e) konverterer dato_tid til datetime objekter
     konverter_dato_tid(rune_data)
     konverter_dato_tid(met_data, set="met")
 
+
     # konverterer strengene til float
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
+
 
     # oppgave f) plotter temperatur mot tid
     subplot(1, "Tid", "Temperatur")
     plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur") # temp rune
     plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
 
+
     # Oppgave g) plotter gjennomsnittstemperaturen for +- 30 elementer (5 minutter) rundt hvert punkt
     redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # henter verdiene for x og y aksene
     plt.plot(redusert_dato, redusert_temperatur, color="orange", label="Gjennomsnittstemperatur") # Gjennomsnittstemperatur
+
 
     # oppgave h) plotter temperaturfall fra 11. juni 17.31 til 12. juni 03.05
     tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data)
@@ -187,11 +196,11 @@ def main():
 
     plt.legend() # viser labels
 
+
     # oppgave i)
     subplot(2, "Tid", "Trykk") # setter opp subplot
     barometrisk_trykk, barometrisk_dato = konverter_trykk(rune_data, "trykk_barometer", multipliser=10) # 1. henter x og y verdier for barometrisk trykk
     plt.plot(barometrisk_dato, barometrisk_trykk, color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
-
 
     absolutt_trykk, absolutt_dato = konverter_trykk(rune_data, "trykk_absolutt", multipliser=10) # 2. henter x og y verdier for absolutt trykk (atmosfærisk trykk)
     plt.plot(absolutt_dato, absolutt_trykk, label="Absolutt trykk") #plotter absolutt trykk mot tid
@@ -200,6 +209,10 @@ def main():
     plt.plot(hav_trykk_dato, hav_trykk, color="green", label="Absolutt trykk MET") #plotter trykk hav mot tid
 
     plt.legend() # viser labels
+
+
+
+
     plt.show() # viser plot
 
 if __name__ == "__main__":
