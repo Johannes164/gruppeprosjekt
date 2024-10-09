@@ -158,6 +158,7 @@ def subplot(posisjon: int, x_label: str, y_label: str) -> None:
     plt.xlabel(x_label) # setter x label
     plt.ylabel(y_label) # setter y label
 
+
 def main():
     # oppgave d) samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
@@ -190,6 +191,7 @@ def main():
     subplot(2, "Tid", "Trykk") # setter opp subplot
     barometrisk_trykk, barometrisk_dato = konverter_trykk(rune_data, "trykk_barometer", multipliser=10) # 1. henter x og y verdier for barometrisk trykk
     plt.plot(barometrisk_dato, barometrisk_trykk, color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
+
 
     absolutt_trykk, absolutt_dato = konverter_trykk(rune_data, "trykk_absolutt", multipliser=10) # 2. henter x og y verdier for absolutt trykk (atmosfærisk trykk)
     plt.plot(absolutt_dato, absolutt_trykk, label="Absolutt trykk") #plotter absolutt trykk mot tid
