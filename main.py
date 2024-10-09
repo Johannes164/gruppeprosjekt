@@ -85,30 +85,15 @@ def samle_met_data(sti: str) -> dict:
             "trykk_hav": trykk_hav
         }
 
-def konverter_rune_dato_tid(data: dict) -> None:
+def konverter_dato_tid(data: dict, set="rune") -> None:
     """
-    Konverterer dato_tid strengene til datetime objekter for runedata
+    Konverterer dato_tid strengene til datetime objekter
     """
-    start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
-    konverterte_datoer = []
-
-    for sekunder_siden_start in data["stoppeklokke"]: # itererer gjennom listen med sekunder siden start
-        konvertert = start_tid + dt.timedelta(seconds=sekunder_siden_start) # legger til antall sekunder siden start til start_tid, man kan plusse og trekke fra datetime objekter
-        konverterte_datoer.append(konvertert)
-
-    data["dato_tid"] = konverterte_datoer
-    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
-
-def konverter_met_dato_tid(data: dict) -> None:
-    """
-    Konverterer dato_tid strengene til datetime objekter for metdata
-    """
-    met_data_liste_datetime = list()
-
-    for tidspunkt in data["dato_tid"]:
-            datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
-            met_data_liste_datetime.append(datetime_tidspunkt)
-    data["dato_tid"] = met_data_liste_datetime
+    if set == "rune":
+        start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
+        data["dato_tid"] = [start_tid + dt.timedelta(seconds=int(tid)) for tid in data["stoppeklokke"]] 
+    elif set == "met":
+        data["dato_tid"] = [dt.datetime.strptime(tidspunkt, "%d.%m.%Y %H:%M") for tidspunkt in data["dato_tid"]]
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
 def konverter_temperatur(data: dict) -> None:
@@ -151,56 +136,27 @@ def temperaturfall(data: dict) -> tuple:
     return x_verdier, y_verdier
 
 # oppgave i)
-def konverter_barometrisk_trykk(data: dict) -> tuple:
+def konverter_trykk(data: dict, kolonnenavn: str, multipliser: float=1.0) -> tuple:
     """
-    Konverterer barometrisk trykk til float verdier og returnerer x og y verdier for plotting
+    Konverterer trykkdata til float verdier og returnerer x og y verdier for plotting.
+    Kolonnenavn definerer hvilken trykk-kolonne som skal konverteres.
+    Multipliserer med en verdi for å korrigere for feil i dataen.
     """
     y_verdier = []
     x_verdier = []
-    for i, trykk in enumerate(data["trykk_barometer"]):
-        if trykk != "":
-            y_verdier.append(float(trykk.replace(",", "."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
+    for i, trykk in enumerate(data[kolonnenavn]):
+        if trykk:
+            y_verdier.append(float(trykk.replace(",", ".")) * multipliser)
             x_verdier.append(data["dato_tid"][i])
     return y_verdier, x_verdier
 
-def konverter_absolutt_trykk(data: dict) -> tuple:
+def subplot(posisjon: int, x_label: str, y_label: str) -> None:
     """
-    Konverterer absolutt trykk til float verdier og returnerer x og y verdier for plotting
+    Setter opp en subplot med gitt posisjon og x og y labels
     """
-    y_verdier = []
-    x_verdier = []
-    for i, trykk in enumerate(data["trykk_absolutt"]):
-        y_verdier.append(float(trykk.replace(",","."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
-        x_verdier.append(data["dato_tid"][i])
-    return y_verdier, x_verdier
-
-def konverter_trykk_hav(data: dict) -> tuple:
-    """
-    Konverterer trykk hav til float verdier og returnerer x og y verdier for plotting
-    """
-    y_verdier = []
-    x_verdier = []
-    for i, trykk in enumerate(data["trykk_hav"]):
-        y_verdier.append(float(trykk.replace(",","."))) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
-        x_verdier.append(data["dato_tid"][i])
-    return y_verdier, x_verdier
-    
-
-def subplot_1():
-    """
-    Setter opp subplot 1   
-    """
-    plt.subplot(2,1,1)
-    plt.xlabel("Tid")
-    plt.ylabel("Temperatur")
-
-def subplot_2():
-    """
-    Setter opp subplot 2
-    """
-    plt.subplot(2,1,2)
-    plt.xlabel("Tid")
-    plt.ylabel("Trykk")
+    plt.subplot(2, 1, posisjon) # setter opp subplot
+    plt.xlabel(x_label) # setter x label
+    plt.ylabel(y_label) # setter y label
 
 def main():
     # oppgave d) samler dataen til ordbøker med lister
@@ -208,15 +164,15 @@ def main():
     met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
     
     # oppgave e) konverterer dato_tid til datetime objekter
-    konverter_rune_dato_tid(rune_data)
-    konverter_met_dato_tid(met_data)
+    konverter_dato_tid(rune_data)
+    konverter_dato_tid(met_data, set="met")
 
     # konverterer strengene til float
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
     # oppgave f) plotter temperatur mot tid
-    subplot_1()
+    subplot(1, "Tid", "Temperatur")
     plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur") # temp rune
     plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
 
@@ -231,14 +187,14 @@ def main():
     plt.legend() # viser labels
 
     # oppgave i)
-    subplot_2()
-    barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # 1. henter x og y verdier for barometrisk trykk
+    subplot(2, "Tid", "Trykk") # setter opp subplot
+    barometrisk_trykk, barometrisk_dato = konverter_trykk(rune_data, "trykk_barometer", multipliser=10) # 1. henter x og y verdier for barometrisk trykk
     plt.plot(barometrisk_dato, barometrisk_trykk, color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
 
-    absolutt_trykk, absolutt_dato = konverter_absolutt_trykk(rune_data) # 2. henter x og y verdier for absolutt trykk (atmosfærisk trykk)
+    absolutt_trykk, absolutt_dato = konverter_trykk(rune_data, "trykk_absolutt", multipliser=10) # 2. henter x og y verdier for absolutt trykk (atmosfærisk trykk)
     plt.plot(absolutt_dato, absolutt_trykk, label="Absolutt trykk") #plotter absolutt trykk mot tid
 
-    hav_trykk, hav_trykk_dato = konverter_trykk_hav(met_data) # 3. henter x og y verdier for hav trykk (atmosfærisk trykk)
+    hav_trykk, hav_trykk_dato = konverter_trykk(met_data, "trykk_hav") # 3. henter x og y verdier for hav trykk (atmosfærisk trykk)
     plt.plot(hav_trykk_dato, hav_trykk, color="green", label="Absolutt trykk MET") #plotter trykk hav mot tid
 
     plt.legend() # viser labels
