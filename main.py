@@ -1,3 +1,24 @@
+"""
+Oppgaver:
+
+a) Johannes
+b) Johannes, Ådne, Mathias
+c) Johannes, Ådne
+d) Johannes
+e) Johannes
+f) Ådne
+g) Johannes
+h) Johannes
+i) Johannes, Ådne
+j) Johannes
+k) og l) ikke gjort (frivillig)
+
+
+pull requests, merging, rydding og finalisering av filer: Johannes
+dokumentasjon: Johannes
+"""
+
+
 import csv
 import datetime as dt
 import matplotlib.pyplot as plt # importerer pyplot fra matplotlib modulen
@@ -6,6 +27,9 @@ RUNE_FILSTI = "trykk_og_temperaturlogg_rune_time.csv" # Definerer filstien til r
 MET_FILSTI = "temperatur_trykk_met_samme_rune_time_datasett.csv" # Definerer filstien til metdata
 
 def samle_rune_data(sti: str) -> dict:
+    """
+    Samler runedataen i en ordbok med lister
+    """
     with open(sti, mode="r", encoding="utf-8-sig") as fil: # ingen forskjell på utf-8 og utf-8-sig her, men god praksis
         # Samler hver kolonne i en liste
         dato_tid = []
@@ -34,6 +58,9 @@ def samle_rune_data(sti: str) -> dict:
         }
 
 def samle_met_data(sti: str) -> dict:
+    """
+    Samler metdataen i en ordbok med lister
+    """
     with open(sti, mode="r", encoding="utf-8-sig") as fil: # -,-
         # Samler hver kolonne i en liste
         dato_tid = []
@@ -58,27 +85,24 @@ def samle_met_data(sti: str) -> dict:
             "trykk_hav": trykk_hav
         }
 
-def konverter_rune_dato_tid(data: dict):
-    start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
-    konverterte_datoer = []
-
-    for sekunder_siden_start in data["stoppeklokke"]: # itererer gjennom listen med sekunder siden start
-        konvertert = start_tid + dt.timedelta(seconds=sekunder_siden_start) # legger til antall sekunder siden start til start_tid, man kan plusse og trekke fra datetime objekter
-        konverterte_datoer.append(konvertert)
-
-    data["dato_tid"] = konverterte_datoer
+def konverter_dato_tid(data: dict, set="rune") -> None:
+    """
+    Konverterer dato_tid strengene til datetime objekter
+    """
+    if set == "rune":
+        start_tid = dt.datetime.strptime(data["dato_tid"][0], "%m.%d.%Y %H:%M") + dt.timedelta(seconds=8) # konverterer datoen ved "Tid siden start" lik 0 til datetime objekt (man ser fra linje 12100 at starttiden egentlig er 8 sekunder senere)
+        data["dato_tid"] = [start_tid + dt.timedelta(seconds=int(tid)) for tid in data["stoppeklokke"]] 
+    elif set == "met":
+        data["dato_tid"] = [dt.datetime.strptime(tidspunkt, "%d.%m.%Y %H:%M") for tidspunkt in data["dato_tid"]]
     # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
 
-def konverter_met_dato_tid(data: dict):
-    met_data_liste_datetime = list()
-
-    for tidspunkt in data["dato_tid"]:
-            datetime_tidspunkt = dt.datetime.strptime(tidspunkt,"%d.%m.%Y %H:%M")
-            met_data_liste_datetime.append(datetime_tidspunkt)
-    data["dato_tid"] = met_data_liste_datetime
-    # ettersom liste og dict variabler er referanser, vil endringen her også endre den globale variabelen
-
-def konverter_temperatur(data: dict):
+def konverter_temperatur(data: dict) -> None:
+    """
+    Går gjennom listen med temperaturer og konverterer de til float verdier
+    Her gjøres det permanent for ordbøkenes data, mens for trykkene gjøres det ikke permanent ettersom det ikke behøves
+    fordi hver bare brukes én gang
+    Her gjør vi det permanent fordi vi bruker temperatur dataen flere ganger og for å bevise at vi klarer dette
+    """
     temperaturer = []
     for temperatur in data["temperatur"]:
         temperaturer.append(float(temperatur.replace(",", ".")))
@@ -86,9 +110,10 @@ def konverter_temperatur(data: dict):
 
 
 # oppgave g)
-def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
+def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int) -> tuple:
     """
     Reduserer volatiliteten til en gitt mengde y verdier ved å for hvert punkt ta snittet av de alle punktene fra x-snitt_delta til x+snitt_delta.
+    Returnerer de x og y verdier for plotting
     """
     redusert_y = [] # tom liste for de reduserte y verdiene
 
@@ -100,104 +125,82 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int):
     return redusert_y, redusert_x
 
 # oppgave h)
-#finner indeksen til 11. juni 17.31 og 12. juni 03.05
-def temperaturfall(data: dict):
+def temperaturfall(data: dict) -> tuple:
+    """
+    Finner temperaturfallet fra 11. juni 17.31 til 12. juni 03.05 og returnerer x og y verdier for plotting
+    """
     indeks_11_juni = data["dato_tid"].index(dt.datetime(2021, 6, 11, 17, 31, 8)) # finner indeksen til 11. juni 17.31
-    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3, 5, 8))
+    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3, 5, 8)) # finner indeksen til 12. juni 03.05
     x_verdier = [data["dato_tid"][indeks_11_juni], data["dato_tid"][indeks_12_juni]]
     y_verdier = [data["temperatur"][indeks_11_juni], data["temperatur"][indeks_12_juni]]
     return x_verdier, y_verdier
 
-
 # oppgave i)
-def konverter_barometrisk_trykk(data: dict):
+def konverter_trykk(data: dict, kolonnenavn: str, multipliser: float=1.0) -> tuple:
+    """
+    Konverterer trykkdata til float verdier og returnerer x og y verdier for plotting.
+    Kolonnenavn definerer hvilken trykk-kolonne som skal konverteres.
+    Multipliserer med en verdi for å korrigere for feil i dataen.
+    """
     y_verdier = []
     x_verdier = []
-    for i, trykk in enumerate(data["trykk_barometer"]):
-        if trykk != "":
-            y_verdier.append(float(trykk.replace(",", "."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
+    for i, trykk in enumerate(data[kolonnenavn]):
+        if trykk:
+            y_verdier.append(float(trykk.replace(",", ".")) * multipliser)
             x_verdier.append(data["dato_tid"][i])
     return y_verdier, x_verdier
 
-def konverter_absolutt_trykk(data: dict):
-    y_verdier = []
-    x_verdier = []
-    for i, trykk in enumerate(data["trykk_absolutt"]):
-        y_verdier.append(float(trykk.replace(",","."))*10) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
-        x_verdier.append(data["dato_tid"][i])
-    return y_verdier, x_verdier
+def subplot(posisjon: int, x_label: str, y_label: str) -> None:
+    """
+    Setter opp en subplot med gitt posisjon og x og y labels
+    """
+    plt.subplot(2, 1, posisjon) # setter opp subplot
+    plt.xlabel(x_label) # setter x label
+    plt.ylabel(y_label) # setter y label
 
-def konverter_trykk_hav(data: dict):
-    y_verdier = []
-    x_verdier = []
-    for i, trykk in enumerate(data["trykk_hav"]):
-        y_verdier.append(float(trykk.replace(",","."))) # ganger med 10, siden tallene ligger rundt 100 i csv fila som virker som en feil
-        x_verdier.append(data["dato_tid"][i])
-    return y_verdier, x_verdier
-    
-
-def plotting(oppg_f, oppg_g, oppg_h, oppg_i1, oppg_i2, oppg_i3):
-    
-    # oppgave f) plotter temperatur mot tid
-    plt.subplot(2,1,1)
-    xaksemet = oppg_f[0]["dato_tid"]
-    yaksemet = oppg_f[0]["temperatur"]
-    plt.plot(xaksemet,yaksemet, color="green", label="Temperatur MET")
-
-
-    xakserune = oppg_f[1]["dato_tid"]
-    yakserune = oppg_f[1]["temperatur"]
-    plt.plot(xakserune,yakserune, label ="Temperatur")
-
-    # oppgave g) plotter redusert temperatur med tid
-    plt.plot(oppg_g[0], oppg_g[1], label="Gjennomsnittstemperatur", color="orange")
-
-    # oppgave h) plotter temperaturfall som en linje mellom de to punktene
-    plt.plot(oppg_h[0], oppg_h[1], color="purple", label="Temperaturfall")
-    
-    plt.xlabel("Tid")
-    plt.ylabel("Temperatur")
-    plt.legend()
-
-
-
-
-    # oppgave i) 
-    plt.subplot(2,1,2)
-    plt.plot(oppg_i1[1], oppg_i1[0], color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
-    plt.plot(oppg_i2[1], oppg_i2[0], color="blue", label="Absolutt trykk") #plotter absolutt trykk mot tid
-    plt.plot(oppg_i3[1], oppg_i3[0], color="green", label="Absolutt trykkk MET") #plotter trykk hav mot tid
-    plt.xlabel("Tid")
-    plt.ylabel("Trykk")
-    
-    
-    plt.legend()
-    plt.show()
 
 def main():
-    # samler dataen til ordbøker med lister
+    # oppgave d) samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
     met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
     
-    # konverterer dato_tid til datetime objekter
-    konverter_rune_dato_tid(rune_data)
-    konverter_met_dato_tid(met_data)
+    # oppgave e) konverterer dato_tid til datetime objekter
+    konverter_dato_tid(rune_data)
+    konverter_dato_tid(met_data, set="met")
 
-    # konverterer temperatur til float
+    # konverterer strengene til float
     konverter_temperatur(rune_data)
     konverter_temperatur(met_data)
 
-    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # oppgave g)
+    # oppgave f) plotter temperatur mot tid
+    subplot(1, "Tid", "Temperatur")
+    plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur") # temp rune
+    plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
 
-    tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data) # oppgave h)
-    
-    barometrisk_trykk, barometrisk_dato = konverter_barometrisk_trykk(rune_data) # oppgave i)
+    # Oppgave g) plotter gjennomsnittstemperaturen for +- 30 elementer (5 minutter) rundt hvert punkt
+    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # henter verdiene for x og y aksene
+    plt.plot(redusert_dato, redusert_temperatur, color="orange", label="Gjennomsnittstemperatur") # Gjennomsnittstemperatur
 
-    absolutt_trykk, absolutt_dato = konverter_absolutt_trykk(rune_data) #oppgave i
+    # oppgave h) plotter temperaturfall fra 11. juni 17.31 til 12. juni 03.05
+    tempfall_tider, tempfall_temperaturer = temperaturfall(rune_data)
+    plt.plot(tempfall_tider, tempfall_temperaturer, color="purple", label="Temperaturfall") # Temperaturfall
 
-    hav_trykk, hav_trykk_dato = konverter_trykk_hav(met_data) #oppgave i
+    plt.legend() # viser labels
 
-    plotting((met_data, rune_data), (redusert_dato, redusert_temperatur), (tempfall_tider, tempfall_temperaturer), (barometrisk_trykk, barometrisk_dato), (absolutt_trykk, absolutt_dato), (hav_trykk, hav_trykk_dato))
+    # oppgave i)
+    subplot(2, "Tid", "Trykk") # setter opp subplot
+    barometrisk_trykk, barometrisk_dato = konverter_trykk(rune_data, "trykk_barometer", multipliser=10) # 1. henter x og y verdier for barometrisk trykk
+    plt.plot(barometrisk_dato, barometrisk_trykk, color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
+
+
+    absolutt_trykk, absolutt_dato = konverter_trykk(rune_data, "trykk_absolutt", multipliser=10) # 2. henter x og y verdier for absolutt trykk (atmosfærisk trykk)
+    plt.plot(absolutt_dato, absolutt_trykk, label="Absolutt trykk") #plotter absolutt trykk mot tid
+
+    hav_trykk, hav_trykk_dato = konverter_trykk(met_data, "trykk_hav") # 3. henter x og y verdier for hav trykk (atmosfærisk trykk)
+    plt.plot(hav_trykk_dato, hav_trykk, color="green", label="Absolutt trykk MET") #plotter trykk hav mot tid
+
+    plt.legend() # viser labels
+    plt.show() # viser plot
 
 if __name__ == "__main__":
     main()
