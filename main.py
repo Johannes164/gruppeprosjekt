@@ -351,7 +351,7 @@ def main():
         alle_temperaturer, bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data)
 
         # lager histogrammet
-        plt.hist(alle_temperaturer, bins=bins, color="blue", edgecolor="black", alpha=0.7, label="Temperatur histogram")
+        plt.hist(alle_temperaturer, bins=bins, align="left", color="blue", edgecolor="black", alpha=0.7, label="Temperatur histogram")
 
     else: # plotter histogrammet for hvert datasett
         #henter temperaturdata for hvert datasett
@@ -361,11 +361,10 @@ def main():
         labels = ["Rune", "MET", "Sinnes", "Sauda"]
 
         # plotter histogrammet for hvert datasett
-        plt.hist(datasett, bins=bins, color=farger, edgecolor="black", alpha=0.7, label=labels)
+        plt.hist(datasett, bins=bins, align="left", color=farger, edgecolor="black", alpha=0.7, label=labels)
         plt.grid(True, axis="y", linewidth=0.5, alpha=0.7)
 
-    plt.xticks(bins[:-1]) # setter x ticks til hver hele grad, fjerner den siste siden den er på kanten og dermed ikke har en bar (målinger=0)
-    plt.xlim(min_temp, max_temp) # setter x aksen til å starte på min_temp og slutte på max_temp
+        plt.xlim(min_temp-0.5, max_temp-0.5)
     
     # 10c)
     plt.legend()
