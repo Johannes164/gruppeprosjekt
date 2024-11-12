@@ -230,7 +230,7 @@ def temperatur_histogram(rune_data: dict, met_data: dict, sinnes_data: dict, sau
     max_temp = int(max(alle_temperaturer)) + 1  # Legger til 1 for å også inkludere den høyeste temperaturen
     
     # lager bins for hver hele grad
-    bins = np.arange(min_temp, max_temp, 1)
+    bins = np.arange(min_temp, max_temp + 1)
     
     if not splitt_datasett:
         return alle_temperaturer, bins
@@ -239,7 +239,7 @@ def temperatur_histogram(rune_data: dict, met_data: dict, sinnes_data: dict, sau
         met_data["temperatur"], 
         sinnes_data["temperatur"], 
         sauda_data["temperatur"]
-        ), bins
+        ), bins, min_temp, max_temp
 
 def rune_temperatur_timevis(rune_data: dict) -> dict:
     """
@@ -346,6 +346,7 @@ def main():
     subplot(1, "Temperatur", "Antall") # setter opp subplot
 
     #henter data for histogrammet
+    a = 0
     if not splitt: # plotter histogrammet for alle datasettene samlet
         alle_temperaturer, bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data)
 
@@ -354,15 +355,17 @@ def main():
 
     else: # plotter histogrammet for hvert datasett
         #henter temperaturdata for hvert datasett
-        (rune_temp, met_temp, sinnes_temp, sauda_temp), bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data, splitt_datasett=splitt)
+        (rune_temp, met_temp, sinnes_temp, sauda_temp), bins, min_temp, max_temp = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data, splitt_datasett=splitt)
         datasett = [rune_temp, met_temp, sinnes_temp, sauda_temp]
         farger = ["blue", "green", "red", "black"]
         labels = ["Rune", "MET", "Sinnes", "Sauda"]
 
         # plotter histogrammet for hvert datasett
-        plt.hist(datasett, bins=bins-0.5, color=farger, edgecolor="black", alpha=0.7, label=labels)
+        plt.hist(datasett, bins=bins, color=farger, edgecolor="black", alpha=0.7, label=labels)
+        plt.grid(True, axis="y", linewidth=0.5, alpha=0.7)
 
     plt.xticks(bins) # setter x ticks til hver hele grad
+    plt.xlim(min_temp, max_temp) # setter x aksen til å starte på min_temp og slutte på max_temp
     
     # 10c)
     plt.legend()
