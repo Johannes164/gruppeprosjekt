@@ -283,6 +283,38 @@ def rune_temperatur_timevis(rune_data: dict) -> dict:
     return samlede_temperaturer
 
 
+#oppgave 10f)
+def standardavvik(malingliste):
+    gjennomsnitt = 0
+    antmalinger = 0
+    for maling in malingliste:
+        gjennomsnitt += maling
+        antmalinger += 1
+    gjennomsnitt = gjennomsnitt/antmalinger
+
+    
+    
+    standardavvik = 0
+   
+    for maling in malingliste:
+        standardavvik += (maling-gjennomsnitt)**2
+    
+    standardavvik = (standardavvik*(1/(antmalinger-1)))**(1/2)
+    return standardavvik
+
+def standardavvik_list(data, snitt_delta):
+
+    standardavvik_y = [] 
+
+    for i in range(snitt_delta, len(data["temperatur"]) - snitt_delta):
+        snitt = standardavvik(data["temperatur"][i-snitt_delta:i+snitt_delta+1])
+        standardavvik_y.append(snitt) 
+    
+    
+    return standardavvik_y
+
+def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
+    plt.errorbar(x_akse,y_akse,yerr=standard_avvik_y,errorevery=30,capsize=5,label="standardavvik rune")
 
 def main():
     
@@ -305,6 +337,8 @@ def main():
     konverter_temperatur(sauda_data)
 
     
+
+
     # oppgave f) plotter temperatur mot tid
     plt.figure(figsize=(7.8, 7.8)) # setter størrelsen på plottet
     subplot(1, "Tid", "Temperatur")
@@ -314,6 +348,8 @@ def main():
     plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
     plt.plot(sinnes_data["dato_tid"], sinnes_data["temperatur"], color="red", label="Temperatur Sinnes") #temp Sinnes
     plt.plot(sauda_data["dato_tid"], sauda_data["temperatur"], color="black",label="Temperatur Sauda") #temp Sauda
+
+    
 
 
     # Oppgave g) plotter gjennomsnittstemperaturen for +- 30 elementer (5 minutter) rundt hvert punkt
@@ -330,6 +366,10 @@ def main():
     tempfall_tider_metdata, tempfall_temperaturer_metdata = temperaturfallmet(met_data, mintid, maxtid)
     plt.plot(tempfall_tider_metdata, tempfall_temperaturer_metdata, color="blue", label="Temperaturfall met_data")
 
+    standardavvik_y = standardavvik_list(rune_data,10)
+    redusert_x = rune_data["dato_tid"][10:-10]
+    redusert_y = rune_data["temperatur"][10:-10]
+    plot_standardavvik(redusert_x,redusert_y,standardavvik_y)
    
     # oppgave i)
     plt.legend()
@@ -355,6 +395,11 @@ def main():
     
     plt.legend() 
     plt.show()
+
+
+
+
+
 
     # oppgave 10 b)
     splitt = True
