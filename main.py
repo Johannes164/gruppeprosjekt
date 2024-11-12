@@ -316,6 +316,88 @@ def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
     # **********************    plt.fill_between(x_akse, øvre, nedre, color="black", label="standardavvik rune")    **********************
     plt.errorbar(x_akse,y_akse,yerr=standard_avvik_y,errorevery=30,capsize=5,label="standardavvik rune", zorder=0, color="#cb00f5") 
 
+# 10e)
+def gjennomsnitt_per_time(data: dict, verdi_navn: str) -> dict:
+    """
+    Beregner gjennomsnitt per time for en gitt verdi (f.eks. temperatur eller trykk).
+    """
+    timevis_data = {}
+    for tid, verdi in zip(data["dato_tid"], data[verdi_navn]):
+        tid = tid.replace(minute=0, second=0, microsecond=0)
+        if verdi == "":
+            continue
+        verdi = float(verdi.replace(",", ".")) if isinstance(verdi, str) else verdi
+        if tid not in timevis_data:
+            timevis_data[tid] = [verdi]
+        else:
+            timevis_data[tid].append(verdi)
+    gjennomsnitt_data = {"dato_tid": [], verdi_navn: []}
+    for tid in sorted(timevis_data.keys()):
+        gjennomsnitt = sum(timevis_data[tid]) / len(timevis_data[tid])
+        gjennomsnitt_data["dato_tid"].append(tid)
+        gjennomsnitt_data[verdi_navn].append(gjennomsnitt)
+    return gjennomsnitt_data
+
+def sammenlign_og_plot_diff(rune_data: dict, met_data: dict, verdi_navn: str, enhet: str):
+    """
+    Sammenligner Rune- og MET-data for en gitt verdi (temperatur eller trykk),
+    og returnerer differanser og relevante statistikker for plotting.
+    """
+    # Bestem hvilken verdi_navn vi skal bruke for met_data
+    met_verdi_navn = verdi_navn if verdi_navn != "trykk_barometer" else "trykk_hav"
+    
+    # Beregn gjennomsnitt per time
+    rune_gjennomsnitt = gjennomsnitt_per_time(rune_data, verdi_navn)
+    met_gjennomsnitt = gjennomsnitt_per_time(met_data, met_verdi_navn)
+    
+    # Juster trykkverdier og enhet hvis nødvendig
+    if "trykk" in verdi_navn:
+        rune_verdi = [v * 10 for v in rune_gjennomsnitt[verdi_navn]]  # Konverter til hPa
+        met_verdi = met_gjennomsnitt[met_verdi_navn]
+    else:
+        rune_verdi = rune_gjennomsnitt[verdi_navn]
+        met_verdi = met_gjennomsnitt[met_verdi_navn]
+    
+    # Finn felles tidspunkter
+    felles_tid = set(rune_gjennomsnitt["dato_tid"]).intersection(set(met_gjennomsnitt["dato_tid"]))
+    felles_tid = sorted(felles_tid)
+    
+    # Beregn differanser
+    differanser = []
+    tider = []
+    for tid in felles_tid:
+        idx_rune = rune_gjennomsnitt["dato_tid"].index(tid)
+        idx_met = met_gjennomsnitt["dato_tid"].index(tid)
+        diff = rune_verdi[idx_rune] - met_verdi[idx_met]
+        differanser.append(diff)
+        tider.append(tid)
+    
+    # Beregn min, maks og gjennomsnitt
+    min_diff = min(differanser)
+    max_diff = max(differanser)
+    gj_snitt_diff = sum(differanser) / len(differanser)
+    
+    # Finn tidspunktene for min og maks differanse
+    min_index = differanser.index(min_diff)
+    max_index = differanser.index(max_diff)
+    min_tid = tider[min_index]
+    max_tid = tider[max_index]
+    
+    # Returner dataene for plotting
+    return {
+        "tider": tider,
+        "differanser": differanser,
+        "min_diff": min_diff,
+        "max_diff": max_diff,
+        "gj_snitt_diff": gj_snitt_diff,
+        "min_tid": min_tid,
+        "max_tid": max_tid,
+        "enhet": enhet,
+        "verdi_navn": verdi_navn
+    }
+
+
+
 def main():
     
     # oppgave d) samler dataen til ordbøker med lister
@@ -447,23 +529,45 @@ def main():
     plt.legend(loc="upper left") 
 
     plt.show()
-
     
+    
+    # 10 e) Sammenligne og plotte differanser
+    # Samle data for temperatur og trykk
+    temp_diff_data = sammenlign_og_plot_diff(rune_data, met_data, "temperatur", "°C")
+    trykk_diff_data = sammenlign_og_plot_diff(rune_data, met_data, "trykk_barometer", "hPa")
+    
+    # Skriv ut tidspunktene med laveste og høyeste differanse for temperatur
+    print(f"Tidspunkt med laveste temperaturdifferanse ({temp_diff_data['min_diff']:.2f} {temp_diff_data['enhet']}): {temp_diff_data['min_tid']}")
+    print(f"Tidspunkt med høyeste temperaturdifferanse ({temp_diff_data['max_diff']:.2f} {temp_diff_data['enhet']}): {temp_diff_data['max_tid']}")
+    
+    # Skriv ut tidspunktene med laveste og høyeste differanse for trykk
+    print(f"Tidspunkt med laveste trykkdifferanse ({trykk_diff_data['min_diff']:.2f} {trykk_diff_data['enhet']}): {trykk_diff_data['min_tid']}")
+    print(f"Tidspunkt med høyeste trykkdifferanse ({trykk_diff_data['max_diff']:.2f} {trykk_diff_data['enhet']}): {trykk_diff_data['max_tid']}")
+    
+    # Plotting
+    plt.figure(figsize=(7.8, 7.8))
+    
+    # Temperaturdifferanse subplot
+    subplot(1, "Tid", f"Differanse i {temp_diff_data['verdi_navn']} ({temp_diff_data['enhet']})")
+    plt.xticks(rotation=10)
+    plt.plot(temp_diff_data['tider'], temp_diff_data['differanser'], label=f"Differanse i {temp_diff_data['verdi_navn']}")
+    plt.axhline(y=temp_diff_data['min_diff'], color='r', linestyle='--', label=f"Min differanse ({temp_diff_data['min_diff']:.2f} {temp_diff_data['enhet']})")
+    plt.axhline(y=temp_diff_data['max_diff'], color='g', linestyle='--', label=f"Maks differanse ({temp_diff_data['max_diff']:.2f} {temp_diff_data['enhet']})")
+    plt.axhline(y=temp_diff_data['gj_snitt_diff'], color='orange', linestyle='--', label=f"Gj.snitt differanse ({temp_diff_data['gj_snitt_diff']:.2f} {temp_diff_data['enhet']})")
+    plt.legend()
+    
+    # Trykkdifferanse subplot
+    subplot(2, "Tid", f"Differanse i {trykk_diff_data['verdi_navn']} ({trykk_diff_data['enhet']})")
+    plt.xticks(rotation=10)
+    plt.plot(trykk_diff_data['tider'], trykk_diff_data['differanser'], label=f"Differanse i {trykk_diff_data['verdi_navn']}")
+    plt.axhline(y=trykk_diff_data['min_diff'], color='r', linestyle='--', label=f"Min differanse ({trykk_diff_data['min_diff']:.2f} {trykk_diff_data['enhet']})")
+    plt.axhline(y=trykk_diff_data['max_diff'], color='g', linestyle='--', label=f"Maks differanse ({trykk_diff_data['max_diff']:.2f} {trykk_diff_data['enhet']})")
+    plt.axhline(y=trykk_diff_data['gj_snitt_diff'], color='orange', linestyle='--', label=f"Gj.snitt differanse ({trykk_diff_data['gj_snitt_diff']:.2f} {trykk_diff_data['enhet']})")
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-"""
-Programmet deres skal finne gjennomsnittlig forskjell mellom temperatur og trykk de to
-dataseriene (Rune Time datasettet og det fra Meteorologisk institutt) samt hvilke
-tidspunkter forskjellen mellom de to seriene er lavest og høyest. Dere trenger bare å
-sammenlikne de linjene i hver fil der tidspunktene er like (for hver dag og time i den ene
-fila, finn tilsvarende dag og time med 0 minutter i den andre fila)
-"""
