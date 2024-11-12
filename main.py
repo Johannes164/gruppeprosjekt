@@ -300,7 +300,6 @@ def standardavvik_list(data, snitt_delta):
         snitt = standardavvik(data["temperatur"][i-snitt_delta:i+snitt_delta+1])
         standardavvik_y.append(snitt) 
     
-    
     return standardavvik_y
 
 def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
@@ -314,7 +313,8 @@ def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
     nedre = y_akse - standard_avvik_y
 
     #plotter
-    plt.fill_between(x_akse, øvre, nedre, color="black", label="standardavvik rune")
+    # **********************    plt.fill_between(x_akse, øvre, nedre, color="black", label="standardavvik rune")    **********************
+    plt.errorbar(x_akse,y_akse,yerr=standard_avvik_y,errorevery=30,capsize=5,label="standardavvik rune", zorder=0, color="#cb00f5") 
 
 def main():
     
@@ -344,8 +344,8 @@ def main():
     subplot(1, "Tid", "Temperatur")
     plt.xticks(rotation=10)
 
-    plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur") # temp rune
-    plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
+    plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur Rune/Time") # temp rune
+    plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET/Sola") # temp MET
     plt.plot(sinnes_data["dato_tid"], sinnes_data["temperatur"], color="red", label="Temperatur Sinnes") #temp Sinnes
     plt.plot(sauda_data["dato_tid"], sauda_data["temperatur"], color="black",label="Temperatur Sauda") #temp Sauda
 
