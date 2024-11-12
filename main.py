@@ -360,7 +360,7 @@ def main():
         labels = ["Rune", "MET", "Sinnes", "Sauda"]
 
         # plotter histogrammet for hvert datasett
-        plt.hist(datasett, bins=bins, color=farger, edgecolor="black", alpha=0.7, label=labels)
+        plt.hist(datasett, bins=bins-0.5, color=farger, edgecolor="black", alpha=0.7, label=labels)
 
     plt.xticks(bins) # setter x ticks til hver hele grad
     
