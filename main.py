@@ -230,16 +230,16 @@ def temperatur_histogram(rune_data: dict, met_data: dict, sinnes_data: dict, sau
     max_temp = int(max(alle_temperaturer)) + 1  # Legger til 1 for å også inkludere den høyeste temperaturen
     
     # lager bins for hver hele grad
-    bins = range(min_temp, max_temp + 1) # -,-
+    bins = np.arange(min_temp, max_temp + 1)
     
     if not splitt_datasett:
         return alle_temperaturer, bins
-    hist_rune, _ = np.histogram(samlet_rune_temp["temperatur"], bins=bins) # np.histogram returnerer antall verdier i hver bin samt dens ender (som vi ikke trenger)
-    hist_met, _ = np.histogram(met_data["temperatur"], bins=bins)
-    hist_sinnes, _ = np.histogram(sinnes_data["temperatur"], bins=bins)
-    hist_sauda, _ = np.histogram(sauda_data["temperatur"], bins=bins)
-
-    return (hist_rune, hist_met, hist_sinnes, hist_sauda), bins
+    return (
+        samlet_rune_temp["temperatur"], 
+        met_data["temperatur"], 
+        sinnes_data["temperatur"], 
+        sauda_data["temperatur"]
+        ), bins, min_temp, max_temp
 
 def rune_temperatur_timevis(rune_data: dict) -> dict:
     """
@@ -346,6 +346,7 @@ def main():
     subplot(1, "Temperatur", "Antall") # setter opp subplot
 
     #henter data for histogrammet
+    a = 0
     if not splitt: # plotter histogrammet for alle datasettene samlet
         alle_temperaturer, bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data)
 
@@ -353,20 +354,18 @@ def main():
         plt.hist(alle_temperaturer, bins=bins, color="blue", edgecolor="black", alpha=0.7, label="Temperatur histogram")
 
     else: # plotter histogrammet for hvert datasett
-        #henter data for hvert datasett
-        (hist_rune, hist_met, hist_sinnes, hist_sauda), bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data, splitt_datasett=splitt)
-
-        grad_punkter = np.array(bins[:-1]) #np array for å gjøre vektor operasjonene enklere (offsets)
-        bredde = 0.2
-        offsets = [-0.3, -0.1, 0.1, 0.3]
+        #henter temperaturdata for hvert datasett
+        (rune_temp, met_temp, sinnes_temp, sauda_temp), bins, min_temp, max_temp = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data, splitt_datasett=splitt)
+        datasett = [rune_temp, met_temp, sinnes_temp, sauda_temp]
+        farger = ["blue", "green", "red", "black"]
+        labels = ["Rune", "MET", "Sinnes", "Sauda"]
 
         # plotter histogrammet for hvert datasett
-        plt.bar(grad_punkter + offsets[0], hist_rune, color="blue", width=bredde, label="Rune")
-        plt.bar(grad_punkter + offsets[1], hist_met, color="green", width=bredde, label="MET")
-        plt.bar(grad_punkter + offsets[2], hist_sinnes, color="red", width=bredde, label="Sinnes")
-        plt.bar(grad_punkter + offsets[3], hist_sauda, color="black", width=bredde, label="Sauda")
+        plt.hist(datasett, bins=bins, color=farger, edgecolor="black", alpha=0.7, label=labels)
+        plt.grid(True, axis="y", linewidth=0.5, alpha=0.7)
 
-    plt.xticks(bins) # setter x ticks til hver hele grad
+    plt.xticks(bins[:-1]) # setter x ticks til hver hele grad, fjerner den siste siden den er på kanten og dermed ikke har en bar (målinger=0)
+    plt.xlim(min_temp, max_temp) # setter x aksen til å starte på min_temp og slutte på max_temp
     
     # 10c)
     plt.legend()
