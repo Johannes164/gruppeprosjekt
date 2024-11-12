@@ -318,6 +318,7 @@ def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
 
 def main():
     
+    
     # oppgave d) samler dataen til ordbøker med lister
     rune_data = samle_rune_data(RUNE_FILSTI)    #   dato_tid, trykk_barometer, trykk_absolutt, temperatur
     met_data = samle_met_data(MET_FILSTI)       #   dato_tid, temperatur, trykk_hav
@@ -329,6 +330,10 @@ def main():
     konverter_dato_tid(met_data, set="met")
     konverter_dato_tid(sinnes_data, set="sinnes")
     konverter_dato_tid(sauda_data, set="sauda")
+    
+    # Oppgave e) Sammenligne og plotte differanser
+    sammenlign_og_plot_diff(rune_data, met_data, "temperatur", "°C")
+    sammenlign_og_plot_diff(rune_data, met_data, "trykk_barometer", "hPa")
 
     # konverterer strengene til float
     konverter_temperatur(rune_data)
@@ -447,6 +452,82 @@ def main():
     plt.legend(loc="upper left") 
 
     plt.show()
+    
+# 10e)
+def gjennomsnitt_per_time(data: dict, verdi_navn: str) -> dict:
+    """
+    Beregner gjennomsnitt per time for en gitt verdi (f.eks. temperatur eller trykk).
+    """
+    timevis_data = {}
+    for tid, verdi in zip(data["dato_tid"], data[trykk_barometer]):
+        tid = tid.replace(minute=0, second=0, microsecond=0)
+        if verdi == '':
+            continue
+        verdi = float(verdi.replace(",", ".")) if isinstance(verdi, str) else verdi
+        if tid not in timevis_data:
+            timevis_data[tid] = [verdi]
+        else:
+            timevis_data[tid].append(verdi)
+    gjennomsnitt_data = {"dato_tid": [], verdi_navn: []}
+    for tid in sorted(timevis_data.keys()):
+        gjennomsnitt = sum(timevis_data[tid]) / len(timevis_data[tid])
+        gjennomsnitt_data["dato_tid"].append(tid)
+        gjennomsnitt_data[verdi_navn].append(gjennomsnitt)
+    return gjennomsnitt_data
+
+def sammenlign_og_plot_diff(rune_data: dict, met_data: dict, verdi_navn: str, enhet: str):
+    """
+    Sammenligner Rune- og MET-data for en gitt verdi (temperatur eller trykk),
+    og plotter differansen over tid med horisontale linjer for min, maks og gjennomsnitt.
+    """
+    # Beregn gjennomsnitt per time
+    rune_gjennomsnitt = gjennomsnitt_per_time(rune_data, verdi_navn)
+    met_gjennomsnitt = gjennomsnitt_per_time(met_data, verdi_navn if verdi_navn != "trykk_barometer" else "trykk_hav")
+    
+    print(met_gjennomsnitt.keys())  # Test
+
+    # Juster trykkverdier og enhet hvis nødvendig
+    if "trykk" in verdi_navn:
+        rune_verdi = [v * 10 for v in rune_gjennomsnitt[verdi_navn]]  # Konverter til hPa
+        met_verdi = met_gjennomsnitt[verdi_navn]
+    else:
+        rune_verdi = rune_gjennomsnitt[verdi_navn]
+        met_verdi = met_gjennomsnitt[verdi_navn]
+    
+    # Finn felles tidspunkter
+    felles_tid = set(rune_gjennomsnitt["dato_tid"]).intersection(set(met_gjennomsnitt["dato_tid"]))
+    felles_tid = sorted(felles_tid)
+    
+    # Beregn differanser
+    differanser = []
+    tider = []
+    for tid in felles_tid:
+        idx_rune = rune_gjennomsnitt["dato_tid"].index(tid)
+        idx_met = met_gjennomsnitt["dato_tid"].index(tid)
+        diff = rune_verdi[idx_rune] - met_verdi[idx_met]
+        differanser.append(diff)
+        tider.append(tid)
+    
+    # Beregn min, maks og gjennomsnitt
+    min_diff = min(differanser)
+    max_diff = max(differanser)
+    gj_snitt_diff = sum(differanser) / len(differanser)
+    
+    # Plot differansen over tid
+    plt.figure(figsize=(10, 5))
+    plt.plot(tider, differanser, label=f"Differanse i {verdi_navn}")
+    plt.axhline(y=min_diff, color='r', linestyle='--', label=f"Min differanse ({min_diff:.2f} {enhet})")
+    plt.axhline(y=max_diff, color='g', linestyle='--', label=f"Maks differanse ({max_diff:.2f} {enhet})")
+    plt.axhline(y=gj_snitt_diff, color='orange', linestyle='--', label=f"Gj.snitt differanse ({gj_snitt_diff:.2f} {enhet})")
+    plt.xlabel("Tid")
+    plt.ylabel(f"Differanse i {verdi_navn} ({enhet})")
+    plt.title(f"Differanse i {verdi_navn} mellom Rune og MET")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
 
     
 
