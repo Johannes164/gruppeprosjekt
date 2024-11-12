@@ -160,11 +160,25 @@ def temperaturfallrune(data: dict) -> tuple:
     return x_verdier, y_verdier
 
 #Oppgave 10a
-def temperaturfallmet(data: dict):
-    indeks_11_juni = data["dato_tid"].index(dt.datetime(2021, 6, 11, 17)) # finner indeksen til 11. juni 17.31
-    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3)) # finner indeksen til 12. juni 03.05
-    x_verdier = [data["dato_tid"][indeks_11_juni], data["dato_tid"][indeks_12_juni]]
-    y_verdier = [data["temperatur"][indeks_11_juni], data["temperatur"][indeks_12_juni]]
+def tempmaxmin(data):
+    tempmax = max(data["temperatur"])
+    tempmaxindeks = data["temperatur"].index(tempmax)
+    maxtemp_tid = data["dato_tid"][tempmaxindeks]
+
+    tempmin = min(data["temperatur"])
+    tempminindeks = data["temperatur"].index(tempmin)
+    mintemp_tid = data["dato_tid"][tempminindeks]
+    return mintemp_tid, maxtemp_tid
+
+
+
+
+
+def temperaturfallmet(data: dict, mindt, maxdt):
+    indeks_mintid = data["dato_tid"].index(mindt) # finner indeksen til 11. juni 17.31
+    indeks_maxtid = data["dato_tid"].index(maxdt) # finner indeksen til 12. juni 03.05
+    x_verdier = [data["dato_tid"][indeks_mintid], data["dato_tid"][indeks_maxtid]]
+    y_verdier = [data["temperatur"][indeks_mintid], data["temperatur"][indeks_maxtid]]
     return x_verdier, y_verdier
 
 # oppgave i)
@@ -269,6 +283,7 @@ def rune_temperatur_timevis(rune_data: dict) -> dict:
     return samlede_temperaturer
 
 
+
 def main():
     
     # oppgave d) samler dataen til ordbøker med lister
@@ -289,7 +304,7 @@ def main():
     konverter_temperatur(sinnes_data)
     konverter_temperatur(sauda_data)
 
-
+    
     # oppgave f) plotter temperatur mot tid
     plt.figure(figsize=(7.8, 7.8)) # setter størrelsen på plottet
     subplot(1, "Tid", "Temperatur")
@@ -311,7 +326,8 @@ def main():
     plt.plot(tempfall_tider_rune, tempfall_temperaturer_rune, color="purple", label="Temperaturfall rune_data") # Temperaturfall
 
   # Oppgave 10 a)
-    tempfall_tider_metdata, tempfall_temperaturer_metdata = temperaturfallmet(met_data)
+    mintid, maxtid = tempmaxmin(met_data)
+    tempfall_tider_metdata, tempfall_temperaturer_metdata = temperaturfallmet(met_data, mintid, maxtid)
     plt.plot(tempfall_tider_metdata, tempfall_temperaturer_metdata, color="blue", label="Temperaturfall met_data")
 
    
@@ -392,17 +408,9 @@ if __name__ == "__main__":
 
 
 """
-Plott data fra noen andre værstasjoner. Ei fil med data fra værstasjonene Sinnes og
-Sauda er lagt ved. I denne fila er data for begge værstasjonene med i samme fil, bruk
-første kolonne for å skille mellom de to værstasjonene. Denne fila er i samme format
-som fila fra Sola værstasjon fra øving 7. Data for værstasjonene Sola, Sauda og Sinnes
-skal alle plottes i samme plott og gjerne sammen med glattete data for UiS datasettet.
-
-Hint 1: Den enkleste løsningen er kanskje å skrive et separat script som splitter fila med
-værdata fra Sinnes og Sauda i separate filer, en for hver værstasjon. Disse separate filene
-kan deretter leses med samme kode som for øving 6 deloppgave d).
-
-Hint 2: Fila fra Sauda og Sinnes starter litt tidligere enn fila for Sola. Dere velger selv om
-dere tar med alt fra Sauda og Sinnes eller om dere kutter starten slik at plottet starter på
-tidspunktet hvor Sola-fila starter.
+Programmet deres skal finne gjennomsnittlig forskjell mellom temperatur og trykk de to
+dataseriene (Rune Time datasettet og det fra Meteorologisk institutt) samt hvilke
+tidspunkter forskjellen mellom de to seriene er lavest og høyest. Dere trenger bare å
+sammenlikne de linjene i hver fil der tidspunktene er like (for hver dag og time i den ene
+fila, finn tilsvarende dag og time med 0 minutter i den andre fila)
 """
