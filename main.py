@@ -3,6 +3,7 @@
 import csv
 import datetime as dt
 import matplotlib.pyplot as plt # importerer pyplot fra matplotlib modulen
+import numpy as np
 
 RUNE_FILSTI = "trykk_og_temperaturlogg_rune_time.csv" # Definerer filstien til runedata
 MET_FILSTI = "temperatur_trykk_met_samme_rune_time_datasett.csv" # Definerer filstien til metdata
@@ -190,14 +191,6 @@ def subplot(posisjon: int, x_label: str, y_label: str) -> None:
     plt.ylabel(y_label) # setter y label
 
 
-"""
-    Plott differansen mellom absolutt og barometrisk trykk i Rune Time fila. Regn ut denne
-    differansen for alle linjer i fila hvor barometrisk trykk eksisterer. Regn ut gjennomsnitt av
-    differansen for de 10 forrige og de 10 neste elementene her for å fjerne støy på samme
-    måte som i øving 6 oppgave g)
-    """
-
-
 def differanse_trykk(data:dict):
     diff_liste = list()
     
@@ -212,6 +205,68 @@ def differanse_trykk(data:dict):
 
 
 
+
+# oppgave 10 b)
+
+
+def temperatur_histogram(rune_data: dict, met_data: dict, sinnes_data: dict, sauda_data: dict, splitt_datasett=False) -> tuple:
+    """
+    Forbereder data for plotting av et histogram over temperaturene fra alle datasettene.
+    Returnerer den kontakinerte temperaturdataen og bin kantene.
+    """
+
+    samlet_rune_temp = rune_temperatur_timevis(rune_data) # henter gjennomsnittstemperaturen for hver time
+
+    # konkatinerer alle temperaturdataene
+    alle_temperaturer = (
+        samlet_rune_temp["temperatur"]
+        + met_data["temperatur"]
+        + sinnes_data["temperatur"]
+        + sauda_data["temperatur"]
+    )
+    
+    # Finn minste og største temperatur, rundet til nærmeste heltall
+    min_temp = int(min(alle_temperaturer))
+    max_temp = int(max(alle_temperaturer)) + 1  # Legger til 1 for å også inkludere den høyeste temperaturen
+    
+    # lager bins for hver hele grad
+    bins = range(min_temp, max_temp + 1) # -,-
+    
+    if not splitt_datasett:
+        return alle_temperaturer, bins
+    hist_rune, _ = np.histogram(samlet_rune_temp["temperatur"], bins=bins) # np.histogram returnerer antall verdier i hver bin samt dens ender (som vi ikke trenger)
+    hist_met, _ = np.histogram(met_data["temperatur"], bins=bins)
+    hist_sinnes, _ = np.histogram(sinnes_data["temperatur"], bins=bins)
+    hist_sauda, _ = np.histogram(sauda_data["temperatur"], bins=bins)
+
+    return (hist_rune, hist_met, hist_sinnes, hist_sauda), bins
+
+def rune_temperatur_timevis(rune_data: dict) -> dict:
+    """
+    Returnerer en dict med timen som nøkkel og snitt temperatur for den timen som verdi for å unngå overrepresentasjon
+    grunnet høy frekvens av målinger
+    """
+    timevis_temperatur = {}
+
+    for time, temp in zip(rune_data["dato_tid"], rune_data["temperatur"]):
+        time = time.replace(minute=0, second=0, microsecond=0)
+        # hvis timen ikke er i ordboken, legg til timen som nøkkel og en liste med temperaturene som verdi
+        if time not in timevis_temperatur:
+            timevis_temperatur[time] = [temp]
+        else:
+            timevis_temperatur[time].append(temp)
+
+    # regner ut gjennomsnittstemperaturen for hver time
+    samlede_temperaturer = {
+        "dato_tid": [],
+        "temperatur": []
+    }
+
+    for time, temperaturer in sorted(timevis_temperatur.items()):
+        samlede_temperaturer["dato_tid"].append(time)
+        samlede_temperaturer["temperatur"].append(sum(temperaturer) / len(temperaturer))
+
+    return samlede_temperaturer
 
 
 def main():
@@ -236,7 +291,10 @@ def main():
 
 
     # oppgave f) plotter temperatur mot tid
+    plt.figure(figsize=(7.8, 7.8)) # setter størrelsen på plottet
     subplot(1, "Tid", "Temperatur")
+    plt.xticks(rotation=10)
+
     plt.plot(rune_data["dato_tid"], rune_data["temperatur"], label="Temperatur") # temp rune
     plt.plot(met_data["dato_tid"], met_data["temperatur"], color="green", label="Temperatur MET") # temp MET
     plt.plot(sinnes_data["dato_tid"], sinnes_data["temperatur"], color="red", label="Temperatur Sinnes") #temp Sinnes
@@ -252,17 +310,16 @@ def main():
     tempfall_tider_rune, tempfall_temperaturer_rune = temperaturfallrune(rune_data)
     plt.plot(tempfall_tider_rune, tempfall_temperaturer_rune, color="purple", label="Temperaturfall rune_data") # Temperaturfall
 
-    plt.legend() # viser labels
-
   # Oppgave 10 a)
     tempfall_tider_metdata, tempfall_temperaturer_metdata = temperaturfallmet(met_data)
     plt.plot(tempfall_tider_metdata, tempfall_temperaturer_metdata, color="blue", label="Temperaturfall met_data")
-    plt.legend()
 
    
-   
     # oppgave i)
+    plt.legend()
     subplot(2, "Tid", "Trykk") # setter opp subplot
+    plt.xticks(rotation=10)
+
     barometrisk_trykk, barometrisk_dato = konverter_trykk(rune_data, "trykk_barometer", multipliser=10) # 1. henter x og y verdier for barometrisk trykk
     plt.plot(barometrisk_dato, barometrisk_trykk, color="orange", label="Barometrisk trykk") #plotter barometrisk trykk mot tid
 
@@ -271,26 +328,57 @@ def main():
 
     hav_trykk_met, hav_trykk_dato_met = konverter_trykk(met_data, "trykk_hav") # 3. henter x og y verdier for hav trykk (atmosfærisk trykk)
     plt.plot(hav_trykk_dato_met, hav_trykk_met, color="green", label="Havtrykk MET") #plotter trykk hav mot tid
-    plt.legend() # viser labels
 
 
     # Oppgave 10 d)
     hav_trykk_sinnes, hav_trykk_dato_sinnes = konverter_trykk(sinnes_data,"trykk_hav")
     plt.plot(hav_trykk_dato_sinnes, hav_trykk_sinnes, color="purple", label="Havtrykk Sinnes")
-    plt.legend()
 
     hav_trykk_sauda, hav_trykk_dato_sauda = konverter_trykk(sauda_data, "trykk_hav")
     plt.plot(hav_trykk_dato_sauda, hav_trykk_sauda, color="yellow", label="Havtrykk Sauda")
-    plt.legend()
+    
+    plt.legend() 
+    plt.show()
 
-    plt.show() # viser plot
+    # oppgave 10 b)
+    splitt = True
+    plt.figure(figsize=(7.8, 7.8)) # setter størrelsen på plottet
+    subplot(1, "Temperatur", "Antall") # setter opp subplot
+
+    #henter data for histogrammet
+    if not splitt: # plotter histogrammet for alle datasettene samlet
+        alle_temperaturer, bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data)
+
+        # lager histogrammet
+        plt.hist(alle_temperaturer, bins=bins, color="blue", edgecolor="black", alpha=0.7, label="Temperatur histogram")
+
+    else: # plotter histogrammet for hvert datasett
+        #henter data for hvert datasett
+        (hist_rune, hist_met, hist_sinnes, hist_sauda), bins = temperatur_histogram(rune_data, met_data, sinnes_data, sauda_data, splitt_datasett=splitt)
+
+        grad_punkter = np.array(bins[:-1]) #np array for å gjøre vektor operasjonene enklere (offsets)
+        bredde = 0.2
+        offsets = [-0.3, -0.1, 0.1, 0.3]
+
+        # plotter histogrammet for hvert datasett
+        plt.bar(grad_punkter + offsets[0], hist_rune, color="blue", width=bredde, label="Rune")
+        plt.bar(grad_punkter + offsets[1], hist_met, color="green", width=bredde, label="MET")
+        plt.bar(grad_punkter + offsets[2], hist_sinnes, color="red", width=bredde, label="Sinnes")
+        plt.bar(grad_punkter + offsets[3], hist_sauda, color="black", width=bredde, label="Sauda")
+
+    plt.xticks(bins) # setter x ticks til hver hele grad
     
     # 10c)
+    plt.legend()
+    subplot(2, "Tid", "Trykk differanse")
+    plt.xticks(rotation=10, fontsize=8)
+
     differanse = differanse_trykk(rune_data)
     diff_redusert, barometrisk_dato_redsert = reduser_stoy(differanse, barometrisk_dato, 10)
     plt.plot(barometrisk_dato_redsert, diff_redusert, label="Trykk differanse")
-    plt.legend()
-    
+
+    plt.legend(loc="upper left") 
+
     plt.show()
 
     
