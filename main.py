@@ -9,6 +9,8 @@ RUNE_FILSTI = "trykk_og_temperaturlogg_rune_time.csv" # Definerer filstien til r
 MET_FILSTI = "temperatur_trykk_met_samme_rune_time_datasett.csv" # Definerer filstien til metdata
 SAUDA_SINNES_FILSTI = "temperatur_trykk_sauda_sinnes_samme_tidsperiode.csv.txt"
 
+AVVIK = 30
+splitt = True
 
 # oppgave d)
 def samle_rune_data(sti: str) -> dict:
@@ -148,38 +150,26 @@ def reduser_stoy(y_verdier: list, x_verdier: list, snitt_delta: int) -> tuple:
     redusert_x = x_verdier[snitt_delta:len(x_verdier)-snitt_delta] # fjerner de første og siste snitt_delta punktene fra x verdiene
     return redusert_y, redusert_x
 
-# oppgave h)
-def temperaturfallrune(data: dict) -> tuple:
+#Oppgave h) og 10a
+def finn_tempfall(data, start_dato, slutt_dato, finn_max=True):
     """
-    Finner temperaturfallet fra 11. juni 17.31 til 12. juni 03.05 og returnerer x og y verdier for plotting
+    Finner maximum eller minimum innen den spesifiserte rekkevidden
     """
-    indeks_11_juni = data["dato_tid"].index(dt.datetime(2021, 6, 11, 17, 31, 8)) # finner indeksen til 11. juni 17.31
-    indeks_12_juni = data["dato_tid"].index(dt.datetime(2021, 6, 12, 3, 5, 8)) # finner indeksen til 12. juni 03.05
-    x_verdier = [data["dato_tid"][indeks_11_juni], data["dato_tid"][indeks_12_juni]]
-    y_verdier = [data["temperatur"][indeks_11_juni], data["temperatur"][indeks_12_juni]]
-    return x_verdier, y_verdier
+    filtrert_temp = []
+    filtrert_dato = []
 
-#Oppgave 10a
-def tempmaxmin(data):
-    tempmax = max(data["temperatur"])
-    tempmaxindeks = data["temperatur"].index(tempmax)
-    maxtemp_tid = data["dato_tid"][tempmaxindeks]
+    for dato, temp in zip(data["dato_tid"], data["temperatur"]):
+        if start_dato <= dato < slutt_dato:
+            filtrert_temp.append(temp)
+            filtrert_dato.append(dato)
 
-    tempmin = min(data["temperatur"])
-    tempminindeks = data["temperatur"].index(tempmin)
-    mintemp_tid = data["dato_tid"][tempminindeks]
-    return mintemp_tid, maxtemp_tid
-
-
-
-
-
-def temperaturfallmet(data: dict, mindt, maxdt):
-    indeks_mintid = data["dato_tid"].index(mindt) # finner indeksen til 11. juni 17.31
-    indeks_maxtid = data["dato_tid"].index(maxdt) # finner indeksen til 12. juni 03.05
-    x_verdier = [data["dato_tid"][indeks_mintid], data["dato_tid"][indeks_maxtid]]
-    y_verdier = [data["temperatur"][indeks_mintid], data["temperatur"][indeks_maxtid]]
-    return x_verdier, y_verdier
+    if finn_max:    
+        ekstrem_temp = max(filtrert_temp)
+    else:
+        ekstrem_temp = min(filtrert_temp)
+        
+    ekstrem_indeks = filtrert_temp.index(ekstrem_temp)
+    return filtrert_dato[ekstrem_indeks], ekstrem_temp
 
 # oppgave i)
 def konverter_trykk(data: dict, kolonnenavn: str, multipliser: float=1.0) -> tuple:
@@ -314,7 +304,17 @@ def standardavvik_list(data, snitt_delta):
     return standardavvik_y
 
 def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
-    plt.errorbar(x_akse,y_akse,yerr=standard_avvik_y,errorevery=30,capsize=5,label="standardavvik rune")
+
+    #konverterer til vektor
+    standard_avvik_y = np.array(standard_avvik_y)
+    y_akse = np.array(y_akse)
+
+    #regner ut området som skal fylles
+    øvre = y_akse + standard_avvik_y
+    nedre = y_akse - standard_avvik_y
+
+    #plotter
+    plt.fill_between(x_akse, øvre, nedre, color="orange", alpha=0.3, label="standardavvik rune")
 
 def main():
     
@@ -353,18 +353,27 @@ def main():
 
 
     # Oppgave g) plotter gjennomsnittstemperaturen for +- 30 elementer (5 minutter) rundt hvert punkt
-    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], 30) # henter verdiene for x og y aksene
+    redusert_temperatur, redusert_dato = reduser_stoy(rune_data["temperatur"], rune_data["dato_tid"], AVVIK) # henter verdiene for x og y aksene
     plt.plot(redusert_dato, redusert_temperatur, color="orange", label="Gjennomsnittstemperatur") # Gjennomsnittstemperatur
 
 
-    # oppgave h) plotter temperaturfall fra 11. juni 17.31 til 12. juni 03.05
-    tempfall_tider_rune, tempfall_temperaturer_rune = temperaturfallrune(rune_data)
-    plt.plot(tempfall_tider_rune, tempfall_temperaturer_rune, color="purple", label="Temperaturfall rune_data") # Temperaturfall
 
-  # Oppgave 10 a)
-    mintid, maxtid = tempmaxmin(met_data)
-    tempfall_tider_metdata, tempfall_temperaturer_metdata = temperaturfallmet(met_data, mintid, maxtid)
-    plt.plot(tempfall_tider_metdata, tempfall_temperaturer_metdata, color="blue", label="Temperaturfall met_data")
+    # oppgave h) og 10 a) plotter lokalt temperaturfall fra 11. juni kl 12 til 12. juni kl 12
+    max_start_dato = dt.datetime(2021, 6, 11, 12, 0)
+    max_slutt_dato = dt.datetime(2021, 6, 12, 0, 0)
+    min_start_dato = dt.datetime(2021, 6, 12, 0, 0)
+    min_slutt_dato = dt.datetime(2021, 6, 12, 12, 0)
+
+    # finner min og max for rune data
+    max_tid_rune, max_temp_rune = finn_tempfall(rune_data, max_start_dato, max_slutt_dato, True)
+    min_tid_rune, min_temp_rune = finn_tempfall(rune_data, min_start_dato, min_slutt_dato, False)
+
+    # samme for met data
+    max_tid_met, max_temp_met = finn_tempfall(met_data, max_start_dato, max_slutt_dato, True)
+    min_tid_met, min_temp_met = finn_tempfall(met_data, min_start_dato, min_slutt_dato, False)
+
+    plt.plot((max_tid_rune, min_tid_rune), (max_temp_rune, min_temp_rune), color="purple", label="Temperaturfall rune_data")
+    plt.plot((max_tid_met, min_tid_met), (max_temp_met, min_temp_met), color="blue", label="Temperaturfall met_data")
 
     standardavvik_y = standardavvik_list(rune_data,10)
     redusert_x = rune_data["dato_tid"][10:-10]
@@ -402,7 +411,6 @@ def main():
 
 
     # oppgave 10 b)
-    splitt = True
     plt.figure(figsize=(7.8, 7.8)) # setter størrelsen på plottet
     subplot(1, "Temperatur", "Antall") # setter opp subplot
 
