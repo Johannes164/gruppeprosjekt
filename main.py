@@ -314,7 +314,7 @@ def plot_standardavvik(x_akse, y_akse, standard_avvik_y):
     nedre = y_akse - standard_avvik_y
 
     #plotter
-    plt.fill_between(x_akse, øvre, nedre, color="orange", alpha=0.3, label="standardavvik rune")
+    plt.fill_between(x_akse, øvre, nedre, color="black", label="standardavvik rune")
 
 def main():
     
