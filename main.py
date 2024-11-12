@@ -364,7 +364,7 @@ def main():
         plt.hist(datasett, bins=bins, color=farger, edgecolor="black", alpha=0.7, label=labels)
         plt.grid(True, axis="y", linewidth=0.5, alpha=0.7)
 
-    plt.xticks(bins) # setter x ticks til hver hele grad
+    plt.xticks(bins[:-1]) # setter x ticks til hver hele grad, fjerner den siste siden den er på kanten og dermed ikke har en bar (målinger=0)
     plt.xlim(min_temp, max_temp) # setter x aksen til å starte på min_temp og slutte på max_temp
     
     # 10c)
