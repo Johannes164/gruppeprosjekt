@@ -371,14 +371,14 @@ def sammenlign_og_plot_diff(rune_data: dict, met_data: dict, verdi_navn: str, en
         diff = rune_verdi[idx_rune] - met_verdi[idx_met]
         differanser.append(diff)
         tider.append(tid)
-    
+
     # Beregn min, maks og gjennomsnitt
-    min_diff = min(differanser)
+    min_diff = min((abs(d) for d in differanser if abs(d) > 1e-2), default=0.0)
     max_diff = max(differanser)
     gj_snitt_diff = sum(differanser) / len(differanser)
     
     # Finn tidspunktene for min og maks differanse
-    min_index = differanser.index(min_diff)
+    min_index = min(range(len(differanser)), key=lambda i: abs(differanser[i] - min_diff))
     max_index = differanser.index(max_diff)
     min_tid = tider[min_index]
     max_tid = tider[max_index]
