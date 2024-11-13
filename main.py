@@ -197,12 +197,14 @@ def subplot(posisjon: int, x_label: str, y_label: str) -> None:
 
 def differanse_trykk(data:dict):
     diff_liste = list()
-    
+    diff_liste_tid = list()
+
     for i in range(len(data["trykk_absolutt"])):
         if data["trykk_barometer"][i] == "":
             continue
         diff_liste.append((float(data["trykk_barometer"][i].replace(",","."))-float(data["trykk_absolutt"][i].replace(",",".")))*10)
-    return diff_liste
+        diff_liste_tid.append(data["dato_tid"][i])
+    return diff_liste, diff_liste_tid
 
 
 
@@ -522,9 +524,9 @@ def main():
     subplot(2, "Tid", "Trykk differanse")
     plt.xticks(rotation=10, fontsize=8)
 
-    differanse = differanse_trykk(rune_data)
-    diff_redusert, barometrisk_dato_redsert = reduser_stoy(differanse, barometrisk_dato, 10)
-    plt.plot(barometrisk_dato_redsert, diff_redusert, label="Trykk differanse")
+    differanse, differanse_tidspunkt = differanse_trykk(rune_data)
+    diff_redusert, differanse_tidspunkt_redusert = reduser_stoy(differanse, differanse_tidspunkt, 10)
+    plt.plot(differanse_tidspunkt_redusert, diff_redusert, label="Trykk differanse")
 
     plt.legend(loc="upper left") 
 
